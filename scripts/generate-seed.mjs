@@ -1,7 +1,33 @@
 import fs from "node:fs";
 
 const items = JSON.parse(fs.readFileSync("menu_items.json", "utf8"));
-const quote = (value) => (value == null ? "null" : `'${String(value).replaceAll("'", "''")}'`);
+const quote = (value) => {
+  if (value == null) return "null";
+
+  let escaped = "";
+  for (const char of String(value)) {
+    if (char === "'") {
+      escaped += "''";
+      continue;
+    }
+
+    if (char === "\\") {
+      escaped += "\\005c";
+      continue;
+    }
+
+    const codePoint = char.codePointAt(0);
+    if (codePoint && codePoint > 0x7f) {
+      escaped += codePoint <= 0xffff
+        ? `\\${codePoint.toString(16).padStart(4, "0")}`
+        : `\\+${codePoint.toString(16).padStart(6, "0")}`;
+    } else {
+      escaped += char;
+    }
+  }
+
+  return `U&'${escaped}'`;
+};
 const bool = (value) => (value ? "true" : "false");
 
 const menuRows = items
@@ -16,30 +42,30 @@ const menuRows = items
   .join(",\n");
 
 const sql = `insert into public.companies (id, name_ar, name_en, group_no) values
-('00000000-0000-0000-0000-000000000001', 'شركة بن دلامة للمقاولات', 'Bin Delamah Contracting Company', 0)
+('00000000-0000-0000-0000-000000000001', ${quote("شركة بن دلامة للمقاولات")}, ${quote("Bin Delamah Contracting Company")}, 0)
 on conflict (id) do update set name_ar = excluded.name_ar, name_en = excluded.name_en, group_no = excluded.group_no;
 
 insert into public.projects (id, company_id, project_no, name_ar, project_type, group_no, subgroup_no, region_code, is_active) values
-('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'ELEC-001', 'مشاريع الكهرباء', 'electrical', 1, null, '0', true),
-('10000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'WATER-001', 'مشاريع المياه', 'private', 2, 1, '0', true),
-('10000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', 'UNIV-001', 'مشاريع الجامعة', 'private', 2, 2, '0', true),
-('10000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001', 'SHARED-001', 'الخدمات المشتركة', 'shared', 3, null, '0', true)
+('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'ELEC-001', ${quote("مشاريع الكهرباء")}, 'electrical', 1, null, '0', true),
+('10000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'WATER-001', ${quote("مشاريع المياه")}, 'private', 2, 1, '0', true),
+('10000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', 'UNIV-001', ${quote("مشاريع الجامعة")}, 'private', 2, 2, '0', true),
+('10000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001', 'SHARED-001', ${quote("الخدمات المشتركة")}, 'shared', 3, null, '0', true)
 on conflict (id) do update set name_ar = excluded.name_ar, project_no = excluded.project_no, project_type = excluded.project_type, group_no = excluded.group_no, subgroup_no = excluded.subgroup_no, is_active = excluded.is_active;
 
 insert into public.roles (code, name_ar, is_system) values
-('super_admin', 'مدير النظام', true),
-('project_manager', 'مدير المشاريع', true),
-('legal_user', 'مستخدم الشؤون القانونية', true),
-('warehouse_user', 'مستخدم المستودعات', true),
-('viewer', 'مستعرض', true)
+('super_admin', ${quote("مدير النظام")}, true),
+('project_manager', ${quote("مدير المشاريع")}, true),
+('legal_user', ${quote("مستخدم الشؤون القانونية")}, true),
+('warehouse_user', ${quote("مستخدم المستودعات")}, true),
+('viewer', ${quote("مستعرض")}, true)
 on conflict (code) do update set name_ar = excluded.name_ar, is_system = excluded.is_system;
 
 insert into public.permissions (code, name_ar, description) values
-('menu.view', 'عرض القائمة', 'عرض شاشات النظام المصرح بها'),
-('menu.create', 'إضافة', 'إنشاء سجلات في الشاشة'),
-('menu.update', 'تعديل', 'تعديل سجلات الشاشة'),
-('menu.delete', 'حذف', 'حذف سجلات الشاشة'),
-('menu.approve', 'اعتماد', 'اعتماد إجراءات الشاشة')
+('menu.view', ${quote("عرض القائمة")}, ${quote("عرض شاشات النظام المصرح بها")}),
+('menu.create', ${quote("إضافة")}, ${quote("إنشاء سجلات في الشاشة")}),
+('menu.update', ${quote("تعديل")}, ${quote("تعديل سجلات الشاشة")}),
+('menu.delete', ${quote("حذف")}, ${quote("حذف سجلات الشاشة")}),
+('menu.approve', ${quote("اعتماد")}, ${quote("اعتماد إجراءات الشاشة")})
 on conflict (code) do update set name_ar = excluded.name_ar, description = excluded.description;
 
 insert into public.menu_items
@@ -74,13 +100,13 @@ on conflict (role_id, menu_item_id) do update set can_view = true, can_create = 
 insert into public.role_menu_permissions (role_id, menu_item_id, can_view, can_create, can_update)
 select r.id, mi.id, true, true, true
 from public.roles r cross join public.menu_items mi
-where r.code = 'legal_user' and (mi.slug in ('legal', 'contracts') or mi.full_path_ar like '%الشؤون القانونية%' or mi.full_path_ar like '%العقود%')
+where r.code = 'legal_user' and (mi.slug in ('legal', 'contracts') or mi.full_path_ar like ${quote("%الشؤون القانونية%")} or mi.full_path_ar like ${quote("%العقود%")})
 on conflict (role_id, menu_item_id) do update set can_view = true, can_create = true, can_update = true;
 
 insert into public.role_menu_permissions (role_id, menu_item_id, can_view, can_create, can_update)
 select r.id, mi.id, true, true, true
 from public.roles r cross join public.menu_items mi
-where r.code = 'warehouse_user' and (mi.full_path_ar like '%المستودع%' or mi.full_path_ar like '%المخزون%' or mi.full_path_ar like '%المخازن%')
+where r.code = 'warehouse_user' and (mi.full_path_ar like ${quote("%المستودع%")} or mi.full_path_ar like ${quote("%المخزون%")} or mi.full_path_ar like ${quote("%المخازن%")})
 on conflict (role_id, menu_item_id) do update set can_view = true, can_create = true, can_update = true;
 
 insert into public.role_menu_permissions (role_id, menu_item_id, can_view)

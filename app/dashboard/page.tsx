@@ -2,8 +2,9 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const [{ data: context }, { count: menuCount }, { count: roleCount }] = await Promise.all([
+  const [{ data: context }, { count: companyCount }, { count: menuCount }, { count: roleCount }] = await Promise.all([
     supabase.from("user_profiles").select("full_name,company_id,default_project_id").maybeSingle(),
+    supabase.from("companies").select("id", { count: "exact", head: true }),
     supabase.from("menu_items").select("id", { count: "exact", head: true }),
     supabase.from("roles").select("id", { count: "exact", head: true })
   ]);
@@ -16,6 +17,10 @@ export default async function DashboardPage() {
       </header>
 
       <section className="stats-grid" aria-label="ملخص النظام">
+        <div className="stat-card">
+          <span>{companyCount ?? 0}</span>
+          <p>مجموعة شركات بن دلامة</p>
+        </div>
         <div className="stat-card">
           <span>{menuCount ?? 0}</span>
           <p>عنصر في القائمة</p>

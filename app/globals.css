@@ -100,9 +100,9 @@ select {
   place-items: center;
   padding: 24px;
   background:
-    radial-gradient(circle at 50% 28%, rgba(53, 184, 226, 0.2), transparent 25rem),
-    radial-gradient(circle at 50% 70%, rgba(13, 58, 104, 0.22), transparent 28rem),
-    linear-gradient(180deg, #14191d, #0f1113 45%, #090a0b);
+    radial-gradient(circle at 88% 10%, rgba(197, 32, 45, 0.58), transparent 26rem),
+    radial-gradient(circle at 12% 90%, rgba(36, 178, 222, 0.56), transparent 30rem),
+    linear-gradient(135deg, #1c0b0e 0%, #101112 42%, #070809 55%, #071a24 100%);
 }
 
 .login-panel {

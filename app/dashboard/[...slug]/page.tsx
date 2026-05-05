@@ -6,9 +6,37 @@ type PageProps = {
   params: Promise<{ slug: string[] }>;
 };
 
+type RegionCard = {
+  code: string;
+  name: string;
+  count: number;
+};
+
 function readRoleId(row: any) {
   const role = Array.isArray(row.roles) ? row.roles[0] : row.roles;
   return role?.id as string | undefined;
+}
+
+function regionName(code: string | null | undefined) {
+  const labels: Record<string, string> = {
+    "0": "غير محدد",
+    jazan: "جازان",
+    makkah: "مكة المكرمة",
+    riyadh: "الرياض",
+    eastern: "المنطقة الشرقية",
+    madinah: "المدينة المنورة",
+    qassim: "القصيم",
+    aseer: "عسير",
+    tabuk: "تبوك",
+    hail: "حائل",
+    northern_borders: "الحدود الشمالية",
+    jawf: "الجوف",
+    baha: "الباحة",
+    najran: "نجران"
+  };
+
+  if (!code) return labels["0"];
+  return labels[code] ?? code;
 }
 
 export default async function MenuPage({ params }: PageProps) {
@@ -24,7 +52,7 @@ export default async function MenuPage({ params }: PageProps) {
   const [{ data: profile }, { data: roleRows }] = await Promise.all([
     supabase
       .from("user_profiles")
-      .select("group_no,subgroup_no,default_project_id")
+      .select("company_id,group_no,subgroup_no,default_project_id")
       .eq("id", authData.user.id)
       .maybeSingle(),
     supabase.from("user_roles").select("roles(id,code)").eq("user_id", authData.user.id)
@@ -91,6 +119,32 @@ export default async function MenuPage({ params }: PageProps) {
     notFound();
   }
 
+  let electricalRegions: RegionCard[] = [];
+
+  if (item.slug === "electrical-projects") {
+    let projectsQuery = supabase
+      .from("projects")
+      .select("id,region_code")
+      .eq("is_active", true)
+      .eq("project_type", "electrical");
+
+    if (!isSuperAdmin && profile?.company_id) {
+      projectsQuery = projectsQuery.eq("company_id", profile.company_id);
+    }
+
+    const { data: electricalProjects } = await projectsQuery;
+    const groupedRegions = new Map<string, RegionCard>();
+
+    for (const project of electricalProjects ?? []) {
+      const code = (project as any).region_code || "0";
+      const current = groupedRegions.get(code) ?? { code, name: regionName(code), count: 0 };
+      current.count += 1;
+      groupedRegions.set(code, current);
+    }
+
+    electricalRegions = Array.from(groupedRegions.values()).sort((a, b) => a.name.localeCompare(b.name, "ar"));
+  }
+
   return (
     <main className="content-page">
       <header className="page-header">
@@ -108,6 +162,31 @@ export default async function MenuPage({ params }: PageProps) {
           <span className={item.can_approve ? "allowed" : ""}>اعتماد</span>
         </div>
       </section>
+
+      {item.slug === "electrical-projects" ? (
+        <section className="module-panel">
+          <div className="section-title-row">
+            <div>
+              <h3>مناطق مشاريع الكهرباء</h3>
+              <p>تظهر هنا المناطق المرتبطة فقط بمشاريع الكهرباء النشطة.</p>
+            </div>
+          </div>
+
+          {electricalRegions.length ? (
+            <div className="region-cards-grid">
+              {electricalRegions.map((region) => (
+                <article className="region-card" key={region.code}>
+                  <span>{region.count}</span>
+                  <h4>{region.name}</h4>
+                  <p>مشاريع كهرباء</p>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="muted">لا توجد مناطق مرتبطة بمشاريع الكهرباء حاليا.</p>
+          )}
+        </section>
+      ) : null}
     </main>
   );
 }

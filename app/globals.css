@@ -193,6 +193,8 @@ select {
   border-color: #8ab9d7;
   background: #f5f9ff;
   color: #112f4a;
+  direction: ltr;
+  text-align: left;
 }
 
 .remember-row {

@@ -354,7 +354,14 @@ select {
   padding-right: 8px;
 }
 
-.sign-out {
+.sidebar-actions {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.sidebar-action {
   display: inline-flex;
   min-height: 38px;
   align-items: center;
@@ -365,6 +372,18 @@ select {
   background: #fff;
   color: #344054;
   cursor: pointer;
+}
+
+.settings-action {
+  border-color: #b9d9ee;
+  background: #f2f8fc;
+  color: var(--brand-dark);
+  font-weight: 700;
+}
+
+.settings-action:hover,
+.sign-out:hover {
+  background: #eaf2f8;
 }
 
 .dashboard-main {

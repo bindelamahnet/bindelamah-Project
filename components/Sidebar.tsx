@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronLeft, LogOut } from "lucide-react";
+import { ChevronDown, ChevronLeft, LogOut, Settings } from "lucide-react";
 import type { MenuNode } from "@/lib/erp/types";
 import { createClient } from "@/lib/supabase/client";
 
@@ -85,10 +85,16 @@ export default function Sidebar() {
         </nav>
       ) : null}
 
-      <button type="button" className="sign-out" onClick={signOut}>
-        <LogOut size={16} />
-        تسجيل الخروج
-      </button>
+      <div className="sidebar-actions">
+        <Link href="/dashboard/settings" className="sidebar-action settings-action">
+          <Settings size={16} />
+          إعدادات النظام
+        </Link>
+        <button type="button" className="sidebar-action sign-out" onClick={signOut}>
+          <LogOut size={16} />
+          تسجيل الخروج
+        </button>
+      </div>
     </aside>
   );
 }

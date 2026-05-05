@@ -181,10 +181,11 @@ select {
 .login-field label {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 5px;
   color: #113b63;
   font-weight: 700;
+  text-align: center;
 }
 
 .login-field input {

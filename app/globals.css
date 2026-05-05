@@ -198,10 +198,11 @@ select {
 .remember-row {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 8px;
   color: #314a5f;
   font-size: 14px;
+  text-align: center;
 }
 
 .remember-row input {

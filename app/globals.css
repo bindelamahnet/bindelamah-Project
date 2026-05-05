@@ -149,9 +149,9 @@ select {
 }
 
 .login-brand h1 {
-  color: #113b63;
+  color: #111111;
   font-family: Andalus, "Segoe UI", Tahoma, sans-serif;
-  font-size: 29px;
+  font-size: 33px;
   font-weight: 900;
   line-height: 1.16;
   white-space: nowrap;

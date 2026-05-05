@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, LogIn } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type Company = {
@@ -85,9 +85,7 @@ export default function LoginPage() {
     <main className="login-page">
       <section className="login-panel" aria-label="تسجيل الدخول">
         <div className="login-brand">
-          <span className="brand-mark">
-            <Building2 size={26} />
-          </span>
+          <img className="brand-logo" src="/bdcc-logo.jpg" alt="BDCC" />
           <div>
             <h1>BDCC ERP</h1>
             <p>بوابة مجموعة شركات بن دلامة</p>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ChevronDown, ChevronLeft, LayoutDashboard, LogOut } from "lucide-react";
+import { ChevronDown, ChevronLeft, LogOut } from "lucide-react";
 import type { MenuNode } from "@/lib/erp/types";
 import { createClient } from "@/lib/supabase/client";
 
@@ -60,9 +60,7 @@ export default function Sidebar() {
   return (
     <aside className="sidebar" dir="rtl">
       <div className="sidebar-header">
-        <div className="sidebar-logo">
-          <LayoutDashboard size={24} />
-        </div>
+        <img className="sidebar-logo" src="/bdcc-logo.jpg" alt="BDCC" />
         <div>
           <h1>BDCC ERP</h1>
           <p>القائمة الرئيسية</p>

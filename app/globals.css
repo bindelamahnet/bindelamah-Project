@@ -120,16 +120,19 @@ select {
   margin-bottom: 24px;
 }
 
-.brand-mark,
+.brand-logo {
+  display: block;
+  width: 148px;
+  height: 64px;
+  object-fit: contain;
+}
+
 .sidebar-logo {
-  display: inline-flex;
-  width: 48px;
-  height: 48px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-  background: #e7f0fb;
-  color: var(--brand);
+  display: block;
+  width: 118px;
+  height: 54px;
+  flex: 0 0 auto;
+  object-fit: contain;
 }
 
 .login-brand h1,

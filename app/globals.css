@@ -497,6 +497,146 @@ select {
   color: var(--success);
 }
 
+.permissions-workspace {
+  display: grid;
+  gap: 18px;
+}
+
+.permissions-toolbar {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.permissions-add-button {
+  background: linear-gradient(100deg, #35b8e2, #113b63);
+}
+
+.permissions-form-panel,
+.users-table-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 18px;
+}
+
+.permissions-form-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--brand-dark);
+}
+
+.permissions-form-header h3 {
+  margin: 0;
+}
+
+.permissions-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 18px;
+  margin-top: 18px;
+}
+
+.permissions-wide-field {
+  grid-column: 1 / -1;
+}
+
+.permissions-form-actions {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+.secondary-button {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: #344054;
+  padding: 0 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.success-message {
+  border: 1px solid #abefc6;
+  border-radius: 8px;
+  background: #ecfdf3;
+  color: var(--success);
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.users-table-wrap {
+  overflow-x: auto;
+}
+
+.users-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  text-align: right;
+}
+
+.users-table th,
+.users-table td {
+  border-bottom: 1px solid #e4e7ec;
+  padding: 12px 10px;
+  vertical-align: middle;
+}
+
+.users-table th {
+  color: #344054;
+  font-size: 14px;
+}
+
+.role-badge {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  border-radius: 8px;
+  background: #e7f0fb;
+  color: var(--brand-dark);
+  padding: 0 10px;
+  font-weight: 800;
+}
+
+.table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.table-action {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: #344054;
+  padding: 0 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.edit-action {
+  border-color: #b9d9ee;
+  color: var(--brand-dark);
+}
+
+.permissions-action {
+  border-color: #98a2b3;
+}
+
+.delete-action {
+  border-color: #fecdca;
+  color: var(--danger);
+}
+
 @media (max-width: 860px) {
   .sidebar {
     position: static;
@@ -510,6 +650,10 @@ select {
   }
 
   .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .permissions-form {
     grid-template-columns: 1fr;
   }
 }

@@ -1,3 +1,5 @@
+import UserPermissionsClient from "./UserPermissionsClient";
+
 export default function UserPermissionsSettingsPage() {
   return (
     <main className="content-page">
@@ -7,10 +9,7 @@ export default function UserPermissionsSettingsPage() {
         <span>إعداد صلاحيات المستخدمين للنظام، وربط الأدوار بالقوائم والشاشات.</span>
       </header>
 
-      <section className="module-panel">
-        <h3>إعداد صلاحيات المستخدمون للنظام</h3>
-        <p className="muted">هذه الشاشة مخصصة لإدارة المستخدمين، الأدوار، وصلاحيات الوصول.</p>
-      </section>
+      <UserPermissionsClient />
     </main>
   );
 }

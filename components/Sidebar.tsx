@@ -10,16 +10,23 @@ function MenuItem({ item }: { item: MenuNode }) {
   const [open, setOpen] = useState(item.level <= 2);
   const hasChildren = item.children.length > 0;
   const href = `/dashboard/${item.slug}`;
+  const centeredCodes = new Set(["0.1.1", "0.1.2"]);
+  const itemClassName = centeredCodes.has(item.wbs_code) ? " menu-item-centered" : "";
 
   return (
     <div className="menu-branch">
       {hasChildren ? (
-        <button type="button" className="menu-button" onClick={() => setOpen((value) => !value)} title={item.full_path_ar}>
+        <button
+          type="button"
+          className={`menu-button${itemClassName}`}
+          onClick={() => setOpen((value) => !value)}
+          title={item.full_path_ar}
+        >
           <span>{item.name_ar}</span>
           {open ? <ChevronDown size={16} /> : <ChevronLeft size={16} />}
         </button>
       ) : (
-        <Link href={href} className="menu-link" title={item.full_path_ar}>
+        <Link href={href} className={`menu-link${itemClassName}`} title={item.full_path_ar}>
           <span>{item.name_ar}</span>
         </Link>
       )}

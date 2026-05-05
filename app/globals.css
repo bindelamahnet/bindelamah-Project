@@ -326,6 +326,19 @@ select {
   white-space: nowrap;
 }
 
+.menu-item-centered {
+  justify-content: center;
+}
+
+.menu-item-centered span {
+  text-align: center;
+}
+
+.menu-item-centered svg {
+  position: absolute;
+  left: 10px;
+}
+
 .menu-children {
   margin-right: 14px;
   border-right: 1px solid #e4e7ec;

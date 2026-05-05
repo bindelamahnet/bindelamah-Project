@@ -100,18 +100,20 @@ select {
   place-items: center;
   padding: 24px;
   background:
-    radial-gradient(circle at 50% 30%, rgba(214, 123, 36, 0.12), transparent 26rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 32%),
-    #10100f;
+    radial-gradient(circle at 50% 28%, rgba(53, 184, 226, 0.2), transparent 25rem),
+    radial-gradient(circle at 50% 70%, rgba(13, 58, 104, 0.22), transparent 28rem),
+    linear-gradient(180deg, #14191d, #0f1113 45%, #090a0b);
 }
 
 .login-panel {
   width: min(100%, 394px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(74, 173, 219, 0.24);
   border-radius: 8px;
-  background: linear-gradient(180deg, #282828, #202020);
+  background: linear-gradient(180deg, #f7fbff, #e8eef5 53%, #dfe7ee);
   padding: 28px;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.48),
+    0 0 34px rgba(53, 184, 226, 0.12);
 }
 
 .login-brand {
@@ -147,7 +149,7 @@ select {
 }
 
 .login-brand h1 {
-  color: #f28a23;
+  color: #113b63;
   font-size: 29px;
   font-weight: 900;
   line-height: 1.16;
@@ -162,7 +164,7 @@ select {
 
 .login-brand p {
   margin: 0;
-  color: #8f8f8f;
+  color: #415363;
 }
 
 .login-form {
@@ -179,15 +181,15 @@ select {
   align-items: center;
   justify-content: flex-end;
   gap: 5px;
-  color: #d7d7d7;
+  color: #113b63;
   font-weight: 700;
 }
 
 .login-field input {
   min-height: 48px;
-  border-color: #aeb8cb;
-  background: #eef4ff;
-  color: #101828;
+  border-color: #8ab9d7;
+  background: #f5f9ff;
+  color: #112f4a;
 }
 
 .remember-row {
@@ -195,30 +197,31 @@ select {
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  color: #c7c7c7;
+  color: #314a5f;
   font-size: 14px;
 }
 
 .remember-row input {
   width: 16px;
   height: 16px;
-  accent-color: #f28a23;
+  accent-color: #1c78b2;
 }
 
 .forgot-link {
-  color: #f28a23;
+  color: #113b63;
   text-align: center;
   font-weight: 800;
 }
 
 .login-submit {
   min-height: 50px;
-  background: linear-gradient(100deg, #f28a23, #efd16b);
-  color: #171717;
+  background: linear-gradient(100deg, #35b8e2, #113b63 55%, #0d1820);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(17, 59, 99, 0.26);
 }
 
 .login-submit:hover {
-  background: linear-gradient(100deg, #dd7416, #e8c65f);
+  background: linear-gradient(100deg, #4bc6ef, #164b78 55%, #121d25);
 }
 
 .login-support {
@@ -226,7 +229,7 @@ select {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  color: #e19943;
+  color: #113b63;
   font-size: 13px;
 }
 

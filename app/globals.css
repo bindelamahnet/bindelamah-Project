@@ -100,30 +100,35 @@ select {
   place-items: center;
   padding: 24px;
   background:
-    linear-gradient(135deg, rgba(11, 107, 203, 0.08), rgba(8, 116, 67, 0.08)),
-    var(--bg);
+    radial-gradient(circle at 50% 30%, rgba(214, 123, 36, 0.12), transparent 26rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 32%),
+    #10100f;
 }
 
 .login-panel {
-  width: min(100%, 460px);
-  border: 1px solid var(--line);
+  width: min(100%, 394px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 8px;
-  background: var(--panel);
+  background: linear-gradient(180deg, #282828, #202020);
   padding: 28px;
-  box-shadow: 0 18px 50px rgba(16, 24, 40, 0.08);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
 }
 
 .login-brand {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 24px;
+  gap: 8px;
+  margin-bottom: 26px;
+  text-align: center;
 }
 
 .brand-logo {
   display: block;
-  width: 148px;
-  height: 64px;
+  width: 142px;
+  height: 70px;
+  border-radius: 8px;
+  background: #fff;
   object-fit: contain;
 }
 
@@ -141,6 +146,13 @@ select {
   font-size: 22px;
 }
 
+.login-brand h1 {
+  color: #f28a23;
+  font-size: 29px;
+  font-weight: 900;
+  line-height: 1.16;
+}
+
 .login-brand p,
 .sidebar-header p {
   margin: 4px 0 0;
@@ -148,9 +160,84 @@ select {
   font-size: 14px;
 }
 
+.login-brand p {
+  margin: 0;
+  color: #8f8f8f;
+}
+
 .login-form {
   display: grid;
-  gap: 16px;
+  gap: 14px;
+}
+
+.login-field {
+  gap: 8px;
+}
+
+.login-field label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  color: #d7d7d7;
+  font-weight: 700;
+}
+
+.login-field input {
+  min-height: 48px;
+  border-color: #aeb8cb;
+  background: #eef4ff;
+  color: #101828;
+}
+
+.remember-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  color: #c7c7c7;
+  font-size: 14px;
+}
+
+.remember-row input {
+  width: 16px;
+  height: 16px;
+  accent-color: #f28a23;
+}
+
+.forgot-link {
+  color: #f28a23;
+  text-align: center;
+  font-weight: 800;
+}
+
+.login-submit {
+  min-height: 50px;
+  background: linear-gradient(100deg, #f28a23, #efd16b);
+  color: #171717;
+}
+
+.login-submit:hover {
+  background: linear-gradient(100deg, #dd7416, #e8c65f);
+}
+
+.login-support {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #e19943;
+  font-size: 13px;
+}
+
+.login-support a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.login-support .whatsapp-support {
+  color: #25d366;
 }
 
 .dashboard-shell {

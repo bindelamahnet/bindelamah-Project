@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogIn } from "lucide-react";
+import { Lock, LogIn, Mail, MessageCircle, User } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type Company = {
@@ -28,6 +28,7 @@ export default function LoginPage() {
   const [projectId, setProjectId] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -86,43 +87,24 @@ export default function LoginPage() {
       <section className="login-panel" aria-label="تسجيل الدخول">
         <div className="login-brand">
           <img className="brand-logo" src="/bdcc-logo.jpg" alt="BDCC" />
-          <div>
-            <h1>BDCC ERP</h1>
-            <p>بوابة مجموعة شركات بن دلامة</p>
-          </div>
+          <h1>شركة بن دلامة للمقاولات</h1>
+          <p>نظام إدارة العقود</p>
         </div>
 
         <form onSubmit={onSubmit} className="login-form">
-          <div className="field">
-            <label htmlFor="company">الشركة</label>
-            <select id="company" value={companyId} onChange={(event) => setCompanyId(event.target.value)} required>
-              {companies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.name_ar}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="field">
-            <label htmlFor="project">المشروع</label>
-            <select id="project" value={projectId} onChange={(event) => setProjectId(event.target.value)}>
-              <option value="">بدون مشروع محدد</option>
-              {filteredProjects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.project_no ? `${project.project_no} - ${project.name_ar}` : project.name_ar}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="field">
-            <label htmlFor="email">البريد الإلكتروني</label>
+          <div className="field login-field">
+            <label htmlFor="email">
+              <User size={15} />
+              Username اسم المستخدم
+            </label>
             <input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
           </div>
 
-          <div className="field">
-            <label htmlFor="password">كلمة المرور</label>
+          <div className="field login-field">
+            <label htmlFor="password">
+              <Lock size={15} />
+              Password كلمة المرور
+            </label>
             <input
               id="password"
               type="password"
@@ -132,12 +114,37 @@ export default function LoginPage() {
             />
           </div>
 
+          <label className="remember-row" htmlFor="remember">
+            <input
+              id="remember"
+              type="checkbox"
+              checked={remember}
+              onChange={(event) => setRemember(event.target.checked)}
+            />
+            <span>Remember me تذكرني</span>
+          </label>
+
+          <a className="forgot-link" href="mailto:support@bindelamah.net">
+            نسيت كلمة المرور / Forgot Password?
+          </a>
+
           {error ? <div className="error">{error}</div> : null}
 
-          <button className="button" type="submit" disabled={loading}>
+          <button className="button login-submit" type="submit" disabled={loading}>
             <LogIn size={18} />
-            {loading ? "جاري الدخول..." : "دخول النظام"}
+            {loading ? "جاري الدخول..." : "Login تسجيل الدخول"}
           </button>
+
+          <div className="login-support">
+            <a className="whatsapp-support" href="https://wa.me/" target="_blank" rel="noreferrer">
+              <MessageCircle size={15} />
+              الدعم عبر الواتساب
+            </a>
+            <a href="mailto:support@bindelamah.net">
+              support@bindelamah.net
+              <Mail size={15} />
+            </a>
+          </div>
         </form>
       </section>
     </main>

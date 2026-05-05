@@ -88,7 +88,7 @@ export default function LoginPage() {
         <div className="login-brand">
           <img className="brand-logo" src="/bdcc-logo.jpg" alt="BDCC" />
           <h1>شركة بن دلامة للمقاولات</h1>
-          <p>نظام إدارة العقود</p>
+          <p>نظام ادارة الموارد</p>
         </div>
 
         <form onSubmit={onSubmit} className="login-form">

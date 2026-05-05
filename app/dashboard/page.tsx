@@ -2,9 +2,18 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const [{ data: context }, { count: companyCount }, { count: menuCount }, { count: roleCount }] = await Promise.all([
+  const [
+    { data: context },
+    { count: companyCount },
+    { count: electricalProjectsCount },
+    { count: waterProjectsCount },
+    { count: menuCount },
+    { count: roleCount }
+  ] = await Promise.all([
     supabase.from("user_profiles").select("full_name,company_id,default_project_id").maybeSingle(),
     supabase.from("companies").select("id", { count: "exact", head: true }),
+    supabase.from("projects").select("id", { count: "exact", head: true }).eq("project_type", "electrical"),
+    supabase.from("projects").select("id", { count: "exact", head: true }).ilike("project_no", "WATER-%"),
     supabase.from("menu_items").select("id", { count: "exact", head: true }),
     supabase.from("roles").select("id", { count: "exact", head: true })
   ]);
@@ -20,6 +29,14 @@ export default async function DashboardPage() {
         <div className="stat-card">
           <span>{companyCount ?? 0}</span>
           <p>مجموعة شركات بن دلامة</p>
+        </div>
+        <div className="stat-card">
+          <span>{electricalProjectsCount ?? 0}</span>
+          <p>مشاريع الكهرباء</p>
+        </div>
+        <div className="stat-card">
+          <span>{waterProjectsCount ?? 0}</span>
+          <p>مشاريع المياه</p>
         </div>
         <div className="stat-card">
           <span>{menuCount ?? 0}</span>

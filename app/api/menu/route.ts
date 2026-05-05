@@ -21,6 +21,20 @@ export async function GET() {
     return NextResponse.json({ error: profileError.message }, { status: 500 });
   }
 
+  const { data: roleRows, error: rolesError } = await supabase
+    .from("user_roles")
+    .select("roles(code)")
+    .eq("user_id", authData.user.id);
+
+  if (rolesError) {
+    return NextResponse.json({ error: rolesError.message }, { status: 500 });
+  }
+
+  const isSuperAdmin = (roleRows ?? []).some((row: any) => {
+    const roles = Array.isArray(row.roles) ? row.roles : [row.roles];
+    return roles.some((role: any) => role?.code === "super_admin");
+  });
+
   const { data, error } = await supabase
     .from("role_menu_permissions")
     .select(
@@ -40,10 +54,10 @@ export async function GET() {
       : [(permission as any).menu_items];
 
     for (const item of items.filter(Boolean)) {
-      const groupMatches = item.group_no === 0 || !profile?.group_no || item.group_no === profile.group_no;
+      const groupMatches = isSuperAdmin || item.group_no === 0 || !profile?.group_no || item.group_no === profile.group_no;
       const subgroupMatches =
-        item.subgroup_no === null || !profile?.subgroup_no || item.subgroup_no === profile.subgroup_no;
-      const projectMatches = !item.requires_project || Boolean(profile?.default_project_id);
+        isSuperAdmin || item.subgroup_no === null || !profile?.subgroup_no || item.subgroup_no === profile.subgroup_no;
+      const projectMatches = isSuperAdmin || !item.requires_project || Boolean(profile?.default_project_id);
 
       if (!groupMatches || !subgroupMatches || !projectMatches) continue;
 

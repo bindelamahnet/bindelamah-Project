@@ -102,10 +102,53 @@ export default function MenuPermissionsClient({ userId }: { userId: string }) {
     );
   }
 
+  function normalizeHierarchy(items: MenuPermission[]) {
+    const itemByCode = new Map(items.map((item) => [item.wbs_code, item]));
+    return items.map((item) => {
+      let parentCode = item.parent_wbs_code;
+      while (parentCode) {
+        const parent = itemByCode.get(parentCode);
+        if (!parent?.can_view) {
+          return { ...item, can_view: false };
+        }
+        parentCode = parent.parent_wbs_code;
+      }
+      return item;
+    });
+  }
+
   function toggleItem(menuItemId: string) {
-    setMenu((items) =>
-      items.map((item) => (item.id === menuItemId ? { ...item, can_view: !item.can_view } : item))
-    );
+    setMenu((items) => {
+      const target = items.find((item) => item.id === menuItemId);
+      if (!target) return items;
+
+      const nextCanView = !target.can_view;
+      const ancestors = new Set<string>();
+      const itemByCode = new Map(items.map((item) => [item.wbs_code, item]));
+      let parentCode = target.parent_wbs_code;
+
+      while (parentCode) {
+        ancestors.add(parentCode);
+        parentCode = itemByCode.get(parentCode)?.parent_wbs_code ?? null;
+      }
+
+      const updated = items.map((item) => {
+        const isTarget = item.id === target.id;
+        const isDescendant = item.wbs_code.startsWith(`${target.wbs_code}.`);
+
+        if (!nextCanView && (isTarget || isDescendant)) {
+          return { ...item, can_view: false };
+        }
+
+        if (nextCanView && (isTarget || ancestors.has(item.wbs_code))) {
+          return { ...item, can_view: true };
+        }
+
+        return item;
+      });
+
+      return normalizeHierarchy(updated);
+    });
   }
 
   async function savePermissions() {
@@ -117,7 +160,7 @@ export default function MenuPermissionsClient({ userId }: { userId: string }) {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        permissions: menu.map((item) => ({ menu_item_id: item.id, can_view: item.can_view }))
+        permissions: normalizeHierarchy(menu).map((item) => ({ menu_item_id: item.id, can_view: item.can_view }))
       })
     });
     const data = await response.json().catch(() => ({}));

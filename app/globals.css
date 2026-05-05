@@ -637,6 +637,242 @@ select {
   color: var(--danger);
 }
 
+.menu-permissions-workspace {
+  display: grid;
+  gap: 18px;
+}
+
+.menu-permissions-user-card,
+.menu-permissions-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.menu-permissions-user-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px;
+}
+
+.menu-permissions-user-card h3,
+.menu-permissions-user-card p {
+  margin: 0;
+}
+
+.menu-permissions-user-card h3 {
+  color: var(--ink);
+  font-size: 22px;
+}
+
+.menu-permissions-user-card p,
+.menu-permissions-user-card span {
+  color: var(--muted);
+}
+
+.menu-permissions-panel {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.menu-permissions-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.menu-permissions-header h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--brand-dark);
+}
+
+.menu-permissions-header p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.menu-permissions-actions,
+.permission-section-actions,
+.permission-bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.danger-outline {
+  border-color: #fecdca;
+  color: var(--danger);
+}
+
+.permissions-search {
+  min-height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  padding: 0 14px;
+  text-align: right;
+}
+
+.menu-permissions-sections {
+  display: grid;
+  gap: 18px;
+}
+
+.allow-button,
+.block-button {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  padding: 0 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.allow-button {
+  background: var(--success);
+}
+
+.block-button {
+  background: var(--danger);
+}
+
+.menu-permission-section {
+  overflow: hidden;
+  border: 1px solid #b9d9ee;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff, #f7fbff);
+}
+
+.menu-permission-section header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #d8e7f2;
+  background: #f2f8fc;
+  padding: 12px;
+}
+
+.menu-permission-section h4 {
+  margin: 0;
+  color: var(--brand-dark);
+  font-size: 18px;
+}
+
+.menu-permission-section header span {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.permission-list {
+  display: grid;
+}
+
+.permission-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 160px;
+  align-items: center;
+  gap: 14px;
+  min-height: 76px;
+  border-bottom: 1px solid #e4e7ec;
+  padding: 12px;
+}
+
+.permission-item:last-child {
+  border-bottom: 0;
+}
+
+.permission-item-title {
+  display: grid;
+  gap: 4px;
+}
+
+.permission-item-title strong {
+  color: #24364b;
+  font-size: 16px;
+}
+
+.permission-item-title span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.permission-state {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.permission-toggle {
+  position: relative;
+  width: 56px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #eef2f6;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+.permission-toggle span {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(16, 24, 40, 0.2);
+  transition: transform 0.18s ease;
+}
+
+.permission-toggle.is-allowed {
+  border-color: var(--success);
+  background: var(--success);
+}
+
+.permission-toggle.is-blocked {
+  border-color: var(--danger);
+}
+
+.permission-toggle.is-blocked span {
+  transform: translateX(-26px);
+}
+
+.state-allowed,
+.state-blocked {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  border-radius: 8px;
+  color: #fff;
+  padding: 0 10px;
+}
+
+.state-allowed {
+  background: var(--success);
+}
+
+.state-blocked {
+  background: var(--danger);
+}
+
 @media (max-width: 860px) {
   .sidebar {
     position: static;
@@ -654,6 +890,17 @@ select {
   }
 
   .permissions-form {
+    grid-template-columns: 1fr;
+  }
+
+  .menu-permissions-user-card,
+  .menu-permissions-header,
+  .menu-permission-section header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .permission-item {
     grid-template-columns: 1fr;
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { Edit3, Plus, ShieldCheck, Trash2, UserPlus } from "lucide-react";
 
 type Role = {
@@ -218,10 +219,13 @@ export default function UserPermissionsClient() {
                           <Edit3 size={15} />
                           تعديل
                         </button>
-                        <button type="button" className="table-action permissions-action">
+                        <Link
+                          href={`/dashboard/settings/user-permissions/${user.id}`}
+                          className="table-action permissions-action"
+                        >
                           <ShieldCheck size={15} />
                           صلاحيات
-                        </button>
+                        </Link>
                         <button type="button" className="table-action delete-action">
                           <Trash2 size={15} />
                           حذف

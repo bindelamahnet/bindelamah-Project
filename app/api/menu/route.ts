@@ -74,8 +74,19 @@ export async function GET() {
   }
 
   const rows = Array.from(unique.values());
-  const present = new Set(rows.map((row) => row.wbs_code));
-  const withAncestors = rows.filter((row) => !row.parent_wbs_code || present.has(row.parent_wbs_code));
+  const byCode = new Map(rows.map((row) => [row.wbs_code, row]));
+
+  function hasAllowedAncestors(row: MenuRow) {
+    let parentCode = row.parent_wbs_code;
+    while (parentCode) {
+      const parent = byCode.get(parentCode);
+      if (!parent) return false;
+      parentCode = parent.parent_wbs_code;
+    }
+    return true;
+  }
+
+  const withAncestors = rows.filter(hasAllowedAncestors);
 
   return NextResponse.json({ menu: buildMenuTree(withAncestors) });
 }

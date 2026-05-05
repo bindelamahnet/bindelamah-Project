@@ -5,6 +5,7 @@ export default async function DashboardPage() {
   const [
     { data: context },
     { count: companyCount },
+    { count: totalProjectsCount },
     { count: electricalProjectsCount },
     { count: waterProjectsCount },
     { count: menuCount },
@@ -12,11 +13,17 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     supabase.from("user_profiles").select("full_name,company_id,default_project_id").maybeSingle(),
     supabase.from("companies").select("id", { count: "exact", head: true }),
+    supabase.from("projects").select("id", { count: "exact", head: true }),
     supabase.from("projects").select("id", { count: "exact", head: true }).eq("project_type", "electrical"),
     supabase.from("projects").select("id", { count: "exact", head: true }).ilike("project_no", "WATER-%"),
     supabase.from("menu_items").select("id", { count: "exact", head: true }),
     supabase.from("roles").select("id", { count: "exact", head: true })
   ]);
+
+  const otherProjectsCount = Math.max(
+    0,
+    (totalProjectsCount ?? 0) - (electricalProjectsCount ?? 0) - (waterProjectsCount ?? 0)
+  );
 
   return (
     <main className="content-page">
@@ -37,6 +44,10 @@ export default async function DashboardPage() {
         <div className="stat-card">
           <span>{waterProjectsCount ?? 0}</span>
           <p>مشاريع المياه</p>
+        </div>
+        <div className="stat-card">
+          <span>{otherProjectsCount}</span>
+          <p>المشاريع الأخرى</p>
         </div>
         <div className="stat-card">
           <span>{menuCount ?? 0}</span>

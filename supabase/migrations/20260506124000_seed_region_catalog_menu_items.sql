@@ -13,8 +13,7 @@ values
   ('catalog.regions.jazan', null, 'جازان', null, 'region-catalog-jazan', 'كتالوج المناطق > جازان', 1, 100, 0, null, false, true),
   ('catalog.regions.najran', null, 'نجران', null, 'region-catalog-najran', 'كتالوج المناطق > نجران', 1, 110, 0, null, false, true),
   ('catalog.regions.baha', null, 'الباحة', null, 'region-catalog-baha', 'كتالوج المناطق > الباحة', 1, 120, 0, null, false, true),
-  ('catalog.regions.northern_borders', null, 'الحدود الشمالية', null, 'region-catalog-northern_borders', 'كتالوج المناطق > الحدود الشمالية', 1, 130, 0, null, false, true),
-  ('catalog.regions.jubail', null, 'الجبيل', null, 'region-catalog-jubail', 'كتالوج المناطق > الجبيل', 1, 140, 0, null, false, true)
+  ('catalog.regions.northern_borders', null, 'الحدود الشمالية', null, 'region-catalog-northern_borders', 'كتالوج المناطق > الحدود الشمالية', 1, 130, 0, null, false, true)
 on conflict (wbs_code) do update set
   name_ar = excluded.name_ar,
   slug = excluded.slug,

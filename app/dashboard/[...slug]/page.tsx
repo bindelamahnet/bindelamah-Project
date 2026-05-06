@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { MenuRow } from "@/lib/erp/types";
 import ElectricalProjectsClient from "./ElectricalProjectsClient";
+import RegionsManagerClient from "./RegionsManagerClient";
 
 type PageProps = {
   params: Promise<{ slug: string[] }>;
@@ -142,15 +143,26 @@ export default async function MenuPage({ params }: PageProps) {
       projectsQuery = projectsQuery.eq("company_id", profile.company_id);
     }
 
-    const [{ data: projectRows }, { data: companyRows }] = await Promise.all([
+    const [{ data: projectRows }, { data: companyRows }, { data: catalogRegions }] = await Promise.all([
       projectsQuery,
-      supabase.from("companies").select("id,name_ar").order("group_no")
+      supabase.from("companies").select("id,name_ar").order("group_no"),
+      supabase
+        .from("menu_items")
+        .select("wbs_code,name_ar,sort_order")
+        .like("wbs_code", "catalog.regions.%")
+        .eq("is_active", true)
+        .order("sort_order")
     ]);
 
     electricalProjects = projectRows ?? [];
     companies = companyRows ?? [];
 
     const groupedRegions = new Map<string, RegionCard>();
+
+    for (const region of catalogRegions ?? []) {
+      const code = (region as any).wbs_code.replace("catalog.regions.", "");
+      groupedRegions.set(code, { code, name: (region as any).name_ar, count: 0 });
+    }
 
     for (const project of electricalProjects) {
       const code = (project as any).region_code || "0";
@@ -251,6 +263,7 @@ export default async function MenuPage({ params }: PageProps) {
       {item.slug === "electrical-projects" ? (
         <ElectricalProjectsClient companies={companies} regions={electricalRegions} />
       ) : null}
+      {item.slug.startsWith("menu-0-1-1-9-3-1") ? <RegionsManagerClient /> : null}
     </main>
   );
 }

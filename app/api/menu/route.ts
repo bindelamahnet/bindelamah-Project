@@ -137,14 +137,31 @@ export async function GET() {
       projectsQuery = projectsQuery.eq("company_id", profile.company_id);
     }
 
-    const { data: electricalProjects, error: projectsError } = await projectsQuery;
+    const [{ data: electricalProjects, error: projectsError }, { data: catalogRegions, error: regionsError }] =
+      await Promise.all([
+        projectsQuery,
+        supabase
+          .from("menu_items")
+          .select("wbs_code,name_ar,sort_order")
+          .like("wbs_code", "catalog.regions.%")
+          .eq("is_active", true)
+          .order("sort_order")
+      ]);
 
     if (projectsError) {
       return NextResponse.json({ error: projectsError.message }, { status: 500 });
     }
+    if (regionsError) {
+      return NextResponse.json({ error: regionsError.message }, { status: 500 });
+    }
 
     const syntheticRows: MenuRow[] = [];
     const regions = new Map<string, { code: string; name: string; projects: any[] }>();
+
+    for (const region of catalogRegions ?? []) {
+      const code = (region as any).wbs_code.replace("catalog.regions.", "");
+      regions.set(code, { code, name: (region as any).name_ar, projects: [] });
+    }
 
     for (const project of electricalProjects ?? []) {
       const code = (project as any).region_code || "0";

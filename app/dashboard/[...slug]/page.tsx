@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { MenuRow } from "@/lib/erp/types";
+import ElectricalProjectsClient from "./ElectricalProjectsClient";
 
 type PageProps = {
   params: Promise<{ slug: string[] }>;
@@ -37,6 +38,14 @@ function regionName(code: string | null | undefined) {
 
   if (!code) return labels["0"];
   return labels[code] ?? code;
+}
+
+function slugPart(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\u0600-\u06ff]+/gi, "-")
+    .replace(/^-+|-+$/g, "") || "item";
 }
 
 export default async function MenuPage({ params }: PageProps) {
@@ -113,29 +122,37 @@ export default async function MenuPage({ params }: PageProps) {
     return true;
   }
 
-  const item = Array.from(unique.values()).find((row) => row.slug === currentSlug && hasAllowedAncestors(row));
-
-  if (!item) {
-    notFound();
-  }
-
   let electricalRegions: RegionCard[] = [];
+  const allowedItems = Array.from(unique.values()).filter(hasAllowedAncestors);
+  const electricalRoot = allowedItems.find((row) => row.wbs_code === "0.1.1");
+  const electricalTemplates = allowedItems.filter((row) => row.parent_wbs_code === "0.1.1");
+  let electricalProjects: any[] = [];
+  let companies: Array<{ id: string; name_ar: string }> = [];
 
-  if (item.slug === "electrical-projects") {
+  if (electricalRoot) {
     let projectsQuery = supabase
       .from("projects")
-      .select("id,region_code")
+      .select("id,project_no,name_ar,company_id,region_code")
       .eq("is_active", true)
-      .eq("project_type", "electrical");
+      .eq("project_type", "electrical")
+      .order("region_code")
+      .order("project_no");
 
     if (!isSuperAdmin && profile?.company_id) {
       projectsQuery = projectsQuery.eq("company_id", profile.company_id);
     }
 
-    const { data: electricalProjects } = await projectsQuery;
+    const [{ data: projectRows }, { data: companyRows }] = await Promise.all([
+      projectsQuery,
+      supabase.from("companies").select("id,name_ar").order("group_no")
+    ]);
+
+    electricalProjects = projectRows ?? [];
+    companies = companyRows ?? [];
+
     const groupedRegions = new Map<string, RegionCard>();
 
-    for (const project of electricalProjects ?? []) {
+    for (const project of electricalProjects) {
       const code = (project as any).region_code || "0";
       const current = groupedRegions.get(code) ?? { code, name: regionName(code), count: 0 };
       current.count += 1;
@@ -143,6 +160,73 @@ export default async function MenuPage({ params }: PageProps) {
     }
 
     electricalRegions = Array.from(groupedRegions.values()).sort((a, b) => a.name.localeCompare(b.name, "ar"));
+  }
+
+  let item = allowedItems.find((row) => row.slug === currentSlug);
+
+  if (!item && electricalRoot) {
+    const region = electricalRegions.find((entry) => currentSlug === `electrical-region-${slugPart(entry.code)}`);
+    if (region) {
+      item = {
+        ...electricalRoot,
+        id: `electrical-region-${region.code}`,
+        wbs_code: `${electricalRoot.wbs_code}.region`,
+        parent_wbs_code: electricalRoot.wbs_code,
+        name_ar: region.name,
+        name_en: null,
+        slug: currentSlug,
+        full_path_ar: `${electricalRoot.full_path_ar} > ${region.name}`,
+        level: electricalRoot.level + 1,
+        requires_project: false
+      };
+    }
+  }
+
+  if (!item && electricalRoot) {
+    const project = electricalProjects.find((row) => currentSlug === `electrical-project-${slugPart(row.project_no || row.name_ar)}`);
+    if (project) {
+      const regionLabel = regionName(project.region_code);
+      const projectNo = project.project_no || project.name_ar;
+      item = {
+        ...electricalRoot,
+        id: `electrical-project-${project.id}`,
+        wbs_code: `${electricalRoot.wbs_code}.project`,
+        parent_wbs_code: `${electricalRoot.wbs_code}.region`,
+        name_ar: projectNo,
+        name_en: null,
+        slug: currentSlug,
+        full_path_ar: `${electricalRoot.full_path_ar} > ${regionLabel} > ${projectNo}`,
+        level: electricalRoot.level + 2,
+        requires_project: true
+      };
+    }
+  }
+
+  if (!item && electricalRoot && currentSlug.includes("-project-")) {
+    const marker = "-project-";
+    const markerIndex = currentSlug.indexOf(marker);
+    const baseSlug = currentSlug.slice(0, markerIndex);
+    const projectPart = currentSlug.slice(markerIndex + marker.length);
+    const template = electricalTemplates.find((row) => row.slug === baseSlug);
+    const project = electricalProjects.find((row) => slugPart(row.project_no || row.name_ar) === projectPart);
+
+    if (template && project) {
+      const regionLabel = regionName(project.region_code);
+      const projectNo = project.project_no || project.name_ar;
+      item = {
+        ...template,
+        id: `${template.id}-${project.id}`,
+        wbs_code: `${electricalRoot.wbs_code}.project.${template.wbs_code}`,
+        parent_wbs_code: `${electricalRoot.wbs_code}.project`,
+        slug: currentSlug,
+        full_path_ar: `${electricalRoot.full_path_ar} > ${regionLabel} > ${projectNo} > ${template.name_ar}`,
+        level: electricalRoot.level + 3
+      };
+    }
+  }
+
+  if (!item) {
+    notFound();
   }
 
   return (
@@ -164,28 +248,7 @@ export default async function MenuPage({ params }: PageProps) {
       </section>
 
       {item.slug === "electrical-projects" ? (
-        <section className="module-panel">
-          <div className="section-title-row">
-            <div>
-              <h3>مناطق مشاريع الكهرباء</h3>
-              <p>تظهر هنا المناطق المرتبطة فقط بمشاريع الكهرباء النشطة.</p>
-            </div>
-          </div>
-
-          {electricalRegions.length ? (
-            <div className="region-cards-grid">
-              {electricalRegions.map((region) => (
-                <article className="region-card" key={region.code}>
-                  <span>{region.count}</span>
-                  <h4>{region.name}</h4>
-                  <p>مشاريع كهرباء</p>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <p className="muted">لا توجد مناطق مرتبطة بمشاريع الكهرباء حاليا.</p>
-          )}
-        </section>
+        <ElectricalProjectsClient companies={companies} regions={electricalRegions} />
       ) : null}
     </main>
   );

@@ -505,6 +505,17 @@ select {
   gap: 14px;
 }
 
+.electrical-project-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0 0 18px;
+  border: 1px solid #d8e7f2;
+  border-radius: 8px;
+  background: #f7fbff;
+  padding: 16px;
+}
+
 .region-card {
   min-height: 132px;
   border: 1px solid #b9d9ee;
@@ -949,6 +960,10 @@ select {
   }
 
   .permissions-form {
+    grid-template-columns: 1fr;
+  }
+
+  .electrical-project-form {
     grid-template-columns: 1fr;
   }
 

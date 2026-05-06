@@ -802,6 +802,11 @@ body {
   gap: 16px;
 }
 
+.project-home-dashboard {
+  display: grid;
+  gap: 22px;
+}
+
 .region-status-grid {
   display: grid;
   grid-template-columns: minmax(250px, 360px) minmax(160px, 220px) minmax(280px, 1fr);

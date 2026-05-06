@@ -227,6 +227,24 @@ export function buildProjectMenuRows({
                 requires_project: true
               });
 
+              syntheticRows.push({
+                ...root,
+                id: `${config.slugPrefix}-project-${project.id}-home`,
+                wbs_code: `${projectCode}.home`,
+                parent_wbs_code: projectCode,
+                name_ar: "الرئيسية",
+                name_en: null,
+                slug: `${projectSlug}-home`,
+                full_path_ar: `${projectPath} > الرئيسية`,
+                level: root.level + 4,
+                sort_order:
+                  root.sort_order * 1000000 +
+                  (regionIndex + 1) * 100000 +
+                  (cityIndex + 1) * 10000 +
+                  (projectIndex + 1) * 1000,
+                requires_project: true
+              });
+
               templates.forEach((template, templateIndex) => {
                 const templateSuffix = template.wbs_code.replace(`${config.rootCode}.`, "");
                 const parentSuffix = template.parent_wbs_code?.replace(`${config.rootCode}.`, "");

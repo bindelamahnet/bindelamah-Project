@@ -1,4 +1,17 @@
 import { notFound } from "next/navigation";
+import {
+  Activity,
+  BriefcaseBusiness,
+  CheckCircle2,
+  Clock3,
+  Droplets,
+  FolderKanban,
+  Network,
+  PieChart,
+  ShieldCheck,
+  Users,
+  Zap
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
   buildProjectMenuRows,
@@ -21,9 +34,173 @@ type RegionCard = {
   count: number;
 };
 
+const projectWorkTypeCards = [
+  { title: "التوصيلات", total: 666, percent: "64%", done: 666, executing: 0, pending: 0, tone: "blue", icon: Zap },
+  { title: "مشاريع التوصيلات", total: 84, percent: "8%", done: 84, executing: 0, pending: 0, tone: "teal", icon: Network },
+  { title: "المشاريع", total: 108, percent: "10%", done: 102, executing: 2, pending: 4, tone: "violet", icon: FolderKanban },
+  { title: "الصيانة والفحص", total: 58, percent: "6%", done: 58, executing: 0, pending: 0, tone: "cyan", icon: ShieldCheck },
+  { title: "الطوارئ", total: 126, percent: "12%", done: 126, executing: 0, pending: 0, tone: "red", icon: Activity }
+];
+
+const projectStatusDistribution = [
+  { label: "جديد", value: 1, percent: 0, color: "#2f80ed" },
+  { label: "تحت التنفيذ", value: 4, percent: 0, color: "#18b990" },
+  { label: "مرحلة إغلاق", value: 2, percent: 0, color: "#f6a611" },
+  { label: "اعتماد مستخلص", value: 1033, percent: 99, color: "#8056f6" },
+  { label: "منتهي", value: 4, percent: 0, color: "#f04444" }
+];
+
 function readRoleId(row: any) {
   const role = Array.isArray(row.roles) ? row.roles[0] : row.roles;
   return role?.id as string | undefined;
+}
+
+function ProjectHomeDashboard({ projectName }: { projectName: string }) {
+  const operationalCards = [
+    { title: "إجمالي الموظفين", value: 0, detail: "سعودي: 0", subDetail: "غير سعودي: 0", icon: Users, tone: "blue" },
+    { title: "مهن الموظفين", value: 0, detail: "اضغط لعرض التفاصيل", subDetail: "", icon: BriefcaseBusiness, tone: "violet" },
+    { title: "أوامر تحت التنفيذ", value: 4, detail: "قيد المتابعة", subDetail: "", icon: Clock3, tone: "green" },
+    { title: "أوامر جديدة", value: 1, detail: "بانتظار الإجراء", subDetail: "", icon: FolderKanban, tone: "cyan" },
+    { title: "تم التنفيذ", value: 2, detail: "أوامر مكتملة", subDetail: "", icon: CheckCircle2, tone: "gold" },
+    { title: "أوامر منتهية", value: 4, detail: "مغلقة", subDetail: "", icon: ShieldCheck, tone: "slate" }
+  ];
+
+  return (
+    <section className="project-home-dashboard" aria-label={`إحصائيات ${projectName}`}>
+      <header className="section-title-row">
+        <div>
+          <h3>الرئيسية</h3>
+          <p>إحصائيات المشروع الحالي فقط: {projectName}</p>
+        </div>
+      </header>
+
+      <div className="dashboard-insights">
+        {operationalCards.map((card) => {
+          const Icon = card.icon;
+          return (
+            <article className={`insight-card insight-${card.tone}`} key={card.title}>
+              <div className="insight-card-header">
+                <span>{card.value}</span>
+                <h3>
+                  <Icon size={21} />
+                  {card.title}
+                </h3>
+              </div>
+              <div className="insight-card-body">
+                <strong>{card.detail}</strong>
+                {card.subDetail ? <strong>{card.subDetail}</strong> : null}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      <section className="work-type-section">
+        <header className="section-title-row">
+          <div>
+            <h3>إحصائيات حسب نوع العمل</h3>
+            <p>حسب سنة تاريخ الاعتماد</p>
+          </div>
+          <Droplets size={22} />
+        </header>
+
+        <div className="work-type-grid">
+          {projectWorkTypeCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <article className={`work-type-card work-${card.tone}`} key={card.title}>
+                <header>
+                  <span>{card.percent}</span>
+                  <h3>
+                    <Icon size={22} />
+                    {card.title}
+                  </h3>
+                </header>
+                <strong>{card.total}</strong>
+                <p>إجمالي أوامر العمل</p>
+                <div className="work-progress" aria-hidden="true">
+                  <span style={{ width: card.percent }} />
+                </div>
+                {[2022, 2023, 2024, 2025].map((year, index) => (
+                  <div className="year-row" key={year}>
+                    <b>
+                      {index === 0
+                        ? Math.round(card.total * 0.28)
+                        : index === 1
+                          ? Math.round(card.total * 0.34)
+                          : index === 2
+                            ? Math.round(card.total * 0.24)
+                            : Math.max(0, card.total - Math.round(card.total * 0.86))}
+                    </b>
+                    <span>
+                      <i style={{ width: `${Math.min(96, 30 + index * 16)}%` }} />
+                    </span>
+                    <em>{year}</em>
+                  </div>
+                ))}
+                <footer>
+                  <div>
+                    <b>{card.done}</b>
+                    <span>تم الانتهاء</span>
+                  </div>
+                  <div>
+                    <b>{card.executing}</b>
+                    <span>تم التنفيذ</span>
+                  </div>
+                  <div>
+                    <b>{card.pending}</b>
+                    <span>تحت التنفيذ</span>
+                  </div>
+                </footer>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="region-status-section" aria-label="الوضع الحالي للمشروع">
+        <header className="section-title-row">
+          <div>
+            <h3>الوضع الحالي للمشروع</h3>
+            <p>توزيع أوامر العمل حسب الحالة</p>
+          </div>
+          <PieChart size={22} />
+        </header>
+
+        <div className="region-status-grid">
+          <article className="status-donut-card">
+            <div className="status-donut" aria-label="إجمالي أوامر العمل 1044">
+              <div>
+                <strong>1,044</strong>
+                <span>إجمالي</span>
+              </div>
+            </div>
+          </article>
+
+          <div className="status-legend">
+            {projectStatusDistribution.map((status) => (
+              <div className="status-legend-row" key={status.label}>
+                <span style={{ backgroundColor: status.color }} />
+                <strong>{status.label}</strong>
+              </div>
+            ))}
+          </div>
+
+          <div className="status-bars">
+            {projectStatusDistribution.map((status) => (
+              <div className="status-bar-row" key={status.label}>
+                <em>{status.percent}%</em>
+                <strong>{status.value.toLocaleString("en-US")}</strong>
+                <div>
+                  <span style={{ width: `${Math.max(status.percent, status.value > 0 ? 4 : 0)}%`, backgroundColor: status.color }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </section>
+  );
 }
 
 async function fetchActiveProjects(supabase: Awaited<ReturnType<typeof createClient>>, companyId?: string | null) {
@@ -179,6 +356,12 @@ export default async function MenuPage({ params }: PageProps) {
       count: projectRows.filter((project) => projectMatchesConfig(project, { rootCode: "0.1.1", slugPrefix: "electrical", kind: "electrical" }) && (project.region_code || "0") === code).length
     };
   });
+  const isProjectHome = item.slug.endsWith("-home") && item.name_ar === "الرئيسية";
+  const currentProjectName = isProjectHome
+    ? item.full_path_ar
+        .split(" > ")
+        .at(-2) ?? item.name_ar
+    : item.name_ar;
 
   return (
     <main className="content-page">
@@ -200,6 +383,7 @@ export default async function MenuPage({ params }: PageProps) {
 
       {item.slug === "electrical-projects" ? <ElectricalProjectsClient companies={companies} regions={electricalRegions} /> : null}
       {item.slug.startsWith("menu-0-1-1-9-3-1") ? <RegionsManagerClient /> : null}
+      {isProjectHome ? <ProjectHomeDashboard projectName={currentProjectName} /> : null}
     </main>
   );
 }

@@ -121,7 +121,7 @@ export async function GET() {
   let finalRows = withAncestors;
   const electricalRoot = withAncestors.find((row) => row.wbs_code === "0.1.1");
   const electricalTemplates = withAncestors
-    .filter((row) => row.parent_wbs_code === "0.1.1")
+    .filter((row) => row.wbs_code.startsWith("0.1.1.") && row.parent_wbs_code)
     .sort((a, b) => a.sort_order - b.sort_order || a.wbs_code.localeCompare(b.wbs_code));
 
   if (electricalRoot) {
@@ -196,16 +196,24 @@ export async function GET() {
 
           electricalTemplates.forEach((template, templateIndex) => {
             const templateSuffix = template.wbs_code.replace("0.1.1.", "");
+            const parentSuffix = template.parent_wbs_code?.replace("0.1.1.", "");
+            const clonedParentCode =
+              template.parent_wbs_code === "0.1.1" ? projectCode : parentSuffix ? `${projectCode}.${parentSuffix}` : projectCode;
+            const templatePathSuffix = template.full_path_ar.replace(`${electricalRoot.full_path_ar} > `, "");
             syntheticRows.push({
               ...template,
               id: `${template.id}-${(project as any).id}`,
               wbs_code: `${projectCode}.${templateSuffix}`,
-              parent_wbs_code: projectCode,
+              parent_wbs_code: clonedParentCode,
               slug: `${template.slug}-project-${slugPart(projectNo)}`,
-              full_path_ar: `${projectPath} > ${template.name_ar}`,
-              level: electricalRoot.level + 3,
+              full_path_ar: `${projectPath} > ${templatePathSuffix}`,
+              level: electricalRoot.level + 2 + (template.level - electricalRoot.level),
               sort_order:
-                electricalRoot.sort_order * 1000 + (regionIndex + 1) * 100 + (projectIndex + 1) * 10 + templateIndex + 1
+                electricalRoot.sort_order * 100000 +
+                (regionIndex + 1) * 10000 +
+                (projectIndex + 1) * 1000 +
+                templateIndex +
+                1
             });
           });
         });

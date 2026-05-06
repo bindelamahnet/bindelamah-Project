@@ -125,7 +125,7 @@ export default async function MenuPage({ params }: PageProps) {
   let electricalRegions: RegionCard[] = [];
   const allowedItems = Array.from(unique.values()).filter(hasAllowedAncestors);
   const electricalRoot = allowedItems.find((row) => row.wbs_code === "0.1.1");
-  const electricalTemplates = allowedItems.filter((row) => row.parent_wbs_code === "0.1.1");
+  const electricalTemplates = allowedItems.filter((row) => row.wbs_code.startsWith("0.1.1.") && row.parent_wbs_code);
   let electricalProjects: any[] = [];
   let companies: Array<{ id: string; name_ar: string }> = [];
 
@@ -213,14 +213,15 @@ export default async function MenuPage({ params }: PageProps) {
     if (template && project) {
       const regionLabel = regionName(project.region_code);
       const projectNo = project.project_no || project.name_ar;
+      const templatePathSuffix = template.full_path_ar.replace(`${electricalRoot.full_path_ar} > `, "");
       item = {
         ...template,
         id: `${template.id}-${project.id}`,
         wbs_code: `${electricalRoot.wbs_code}.project.${template.wbs_code}`,
-        parent_wbs_code: `${electricalRoot.wbs_code}.project`,
+        parent_wbs_code: `${electricalRoot.wbs_code}.project.${template.parent_wbs_code}`,
         slug: currentSlug,
-        full_path_ar: `${electricalRoot.full_path_ar} > ${regionLabel} > ${projectNo} > ${template.name_ar}`,
-        level: electricalRoot.level + 3
+        full_path_ar: `${electricalRoot.full_path_ar} > ${regionLabel} > ${projectNo} > ${templatePathSuffix}`,
+        level: electricalRoot.level + 2 + (template.level - electricalRoot.level)
       };
     }
   }

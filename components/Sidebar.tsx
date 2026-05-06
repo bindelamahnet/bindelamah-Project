@@ -52,10 +52,20 @@ function MenuItem({
   const href = `/dashboard/${item.slug}`;
   const centeredCodes = new Set(["0.1.1", "0.1.2"]);
   const itemClassName = centeredCodes.has(item.wbs_code) ? " menu-item-centered" : "";
+  const isProjectHome = item.slug.endsWith("-home");
 
   return (
     <div className="menu-branch">
-      {hasChildren ? (
+      {hasChildren && isProjectHome ? (
+        <div className={`menu-linkable-branch${itemClassName}`} title={item.full_path_ar}>
+          <Link href={href} onClick={() => onLeafSelect(item)}>
+            <span>{item.name_ar}</span>
+          </Link>
+          <button type="button" aria-label={open ? "طي القائمة" : "فتح القائمة"} onClick={() => onBranchToggle(item)}>
+            {open ? <ChevronDown size={16} /> : <ChevronLeft size={16} />}
+          </button>
+        </div>
+      ) : hasChildren ? (
         <button
           type="button"
           className={`menu-button${itemClassName}`}

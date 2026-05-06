@@ -304,7 +304,8 @@ select {
 }
 
 .menu-button,
-.menu-link {
+.menu-link,
+.menu-linkable-branch {
   position: relative;
   display: flex;
   width: 100%;
@@ -322,16 +323,43 @@ select {
 }
 
 .menu-button:hover,
-.menu-link:hover {
+.menu-link:hover,
+.menu-linkable-branch:hover {
   background: #f2f4f7;
   color: var(--brand-dark);
 }
 
 .menu-button span,
-.menu-link span {
+.menu-link span,
+.menu-linkable-branch span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.menu-linkable-branch a {
+  display: inline-flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+}
+
+.menu-linkable-branch button {
+  display: inline-flex;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.menu-linkable-branch button:hover {
+  background: #e7f0fb;
 }
 
 .menu-item-centered {

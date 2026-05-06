@@ -6,6 +6,7 @@ import {
   Droplets,
   FolderKanban,
   Network,
+  PieChart,
   ShieldCheck,
   Users,
   Zap
@@ -18,6 +19,14 @@ const workTypeCards = [
   { title: "المشاريع", total: 108, percent: "10%", done: 102, executing: 2, pending: 4, tone: "violet", icon: FolderKanban },
   { title: "الصيانة والفحص", total: 58, percent: "6%", done: 58, executing: 0, pending: 0, tone: "cyan", icon: ShieldCheck },
   { title: "الطوارئ", total: 126, percent: "12%", done: 126, executing: 0, pending: 0, tone: "red", icon: Activity }
+];
+
+const statusDistribution = [
+  { label: "جديد", value: 1, percent: 0, color: "#2f80ed" },
+  { label: "تحت التنفيذ", value: 4, percent: 0, color: "#18b990" },
+  { label: "مرحلة إغلاق", value: 2, percent: 0, color: "#f6a611" },
+  { label: "اعتماد مستخلص", value: 1033, percent: 99, color: "#8056f6" },
+  { label: "منتهي", value: 4, percent: 0, color: "#f04444" }
 ];
 
 export default async function DashboardPage() {
@@ -154,6 +163,48 @@ export default async function DashboardPage() {
               </article>
             );
           })}
+        </div>
+      </section>
+
+      <section className="region-status-section" aria-label="الوضع الحالي للمنطقة">
+        <header className="section-title-row">
+          <div>
+            <h3>الوضع الحالي للمنطقة</h3>
+            <p>توزيع أوامر العمل حسب الحالة</p>
+          </div>
+          <PieChart size={22} />
+        </header>
+
+        <div className="region-status-grid">
+          <article className="status-donut-card">
+            <div className="status-donut" aria-label="إجمالي أوامر العمل 1044">
+              <div>
+                <strong>1,044</strong>
+                <span>إجمالي</span>
+              </div>
+            </div>
+          </article>
+
+          <div className="status-legend">
+            {statusDistribution.map((item) => (
+              <div className="status-legend-row" key={item.label}>
+                <span style={{ backgroundColor: item.color }} />
+                <strong>{item.label}</strong>
+              </div>
+            ))}
+          </div>
+
+          <div className="status-bars">
+            {statusDistribution.map((item) => (
+              <div className="status-bar-row" key={item.label}>
+                <em>{item.percent}%</em>
+                <strong>{item.value.toLocaleString("en-US")}</strong>
+                <div>
+                  <span style={{ width: `${Math.max(item.percent, item.value > 0 ? 4 : 0)}%`, backgroundColor: item.color }} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     </main>

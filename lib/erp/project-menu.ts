@@ -30,6 +30,43 @@ export const PROJECT_MENU_CONFIGS: ProjectMenuConfig[] = [
   { rootCode: "0.1.2.2", slugPrefix: "university", kind: "university" }
 ];
 
+const projectHomeOrder = [
+  "إدارة الموارد",
+  "مدير المشاريع",
+  "القسم الفني",
+  "موظف سيكيكو",
+  "إدارة المستودع",
+  "إحصائيات",
+  "الإدارة",
+  "الملف الشخصي"
+];
+
+const projectHomeNameOverrides: Record<string, string> = {
+  "0.1.1.3": "إدارة الموارد",
+  "0.1.1.8": "إحصائيات",
+  "0.1.1.10": "الملف الشخصي"
+};
+
+function projectHomeDisplayName(template: MenuRow) {
+  return projectHomeNameOverrides[template.wbs_code] ?? template.name_ar;
+}
+
+function projectHomeSortRank(template: MenuRow) {
+  const displayName = projectHomeDisplayName(template);
+  const rank = projectHomeOrder.indexOf(displayName);
+  return rank === -1 ? projectHomeOrder.length + template.sort_order : rank;
+}
+
+function projectHomePathSuffix(template: MenuRow, rootCode: string, rootPath: string) {
+  const suffix = template.full_path_ar.replace(`${rootPath} > `, "");
+  const topLevelCode = `${rootCode}.${template.wbs_code.replace(`${rootCode}.`, "").split(".")[0]}`;
+  const override = projectHomeNameOverrides[topLevelCode];
+  if (!override) return suffix;
+  const parts = suffix.split(" > ");
+  parts[0] = override;
+  return parts.join(" > ");
+}
+
 const regionLabels: Record<string, string> = {
   "0": "غير محدد",
   riyadh: "الرياض",
@@ -131,7 +168,13 @@ export function buildProjectMenuRows({
 
     const templates = baseRows
       .filter((row) => row.wbs_code.startsWith(`${config.rootCode}.`) && row.parent_wbs_code)
-      .sort((a, b) => a.sort_order - b.sort_order || a.wbs_code.localeCompare(b.wbs_code));
+      .filter((row) => row.parent_wbs_code !== config.rootCode || row.name_ar !== "الرئيسية")
+      .sort((a, b) => {
+        if (a.parent_wbs_code === config.rootCode && b.parent_wbs_code === config.rootCode) {
+          return projectHomeSortRank(a) - projectHomeSortRank(b) || a.sort_order - b.sort_order || a.wbs_code.localeCompare(b.wbs_code);
+        }
+        return a.sort_order - b.sort_order || a.wbs_code.localeCompare(b.wbs_code);
+      });
 
     const configProjects = projects
       .filter((project) => projectMatchesConfig(project, config))
@@ -248,29 +291,32 @@ export function buildProjectMenuRows({
               templates.forEach((template, templateIndex) => {
                 const templateSuffix = template.wbs_code.replace(`${config.rootCode}.`, "");
                 const parentSuffix = template.parent_wbs_code?.replace(`${config.rootCode}.`, "");
+                const homeCode = `${projectCode}.home`;
                 const clonedParentCode =
                   template.parent_wbs_code === config.rootCode
-                    ? projectCode
+                    ? homeCode
                     : parentSuffix
                       ? `${projectCode}.${parentSuffix}`
-                      : projectCode;
-                const templatePathSuffix = template.full_path_ar.replace(`${root.full_path_ar} > `, "");
+                      : homeCode;
+                const isHomeChild = template.parent_wbs_code === config.rootCode;
+                const displayName = isHomeChild ? projectHomeDisplayName(template) : template.name_ar;
+                const displayPathSuffix = projectHomePathSuffix(template, config.rootCode, root.full_path_ar);
 
                 syntheticRows.push({
                   ...template,
                   id: `${template.id}-${project.id}`,
                   wbs_code: `${projectCode}.${templateSuffix}`,
                   parent_wbs_code: clonedParentCode,
+                  name_ar: displayName,
                   slug: `${template.slug}-project-${slugPart(projectNo)}`,
-                  full_path_ar: `${projectPath} > ${templatePathSuffix}`,
+                  full_path_ar: `${projectPath} > الرئيسية > ${displayPathSuffix}`,
                   level: root.level + 3 + (template.level - root.level),
                   sort_order:
                     root.sort_order * 1000000 +
                     (regionIndex + 1) * 100000 +
                     (cityIndex + 1) * 10000 +
                     (projectIndex + 1) * 1000 +
-                    templateIndex +
-                    1
+                    (isHomeChild ? projectHomeSortRank(template) * 100 : templateIndex + 1)
                 });
               });
             });

@@ -33,15 +33,7 @@ function collectDescendantKeys(item: MenuNode): string[] {
 }
 
 function defaultOpenKeys(nodes: MenuNode[]) {
-  const keys = new Set<string>();
-  const visit = (items: MenuNode[]) => {
-    for (const item of items) {
-      if (item.level <= 2) keys.add(item.wbs_code);
-      visit(item.children);
-    }
-  };
-  visit(nodes);
-  return keys;
+  return new Set(nodes.map((item) => item.wbs_code));
 }
 
 function MenuItem({

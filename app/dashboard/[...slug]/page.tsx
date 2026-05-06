@@ -1,5 +1,12 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import {
+  buildProjectMenuRows,
+  projectMatchesConfig,
+  removeTransformedProjectDescendants,
+  type CatalogRegion,
+  type ProjectRow
+} from "@/lib/erp/project-menu";
 import type { MenuRow } from "@/lib/erp/types";
 import ElectricalProjectsClient from "./ElectricalProjectsClient";
 import RegionsManagerClient from "./RegionsManagerClient";
@@ -19,34 +26,36 @@ function readRoleId(row: any) {
   return role?.id as string | undefined;
 }
 
-function regionName(code: string | null | undefined) {
-  const labels: Record<string, string> = {
-    "0": "غير محدد",
-    jazan: "جازان",
-    makkah: "مكة المكرمة",
-    riyadh: "الرياض",
-    eastern: "المنطقة الشرقية",
-    madinah: "المدينة المنورة",
-    qassim: "القصيم",
-    aseer: "عسير",
-    tabuk: "تبوك",
-    hail: "حائل",
-    northern_borders: "الحدود الشمالية",
-    jawf: "الجوف",
-    baha: "الباحة",
-    najran: "نجران"
+async function fetchActiveProjects(supabase: Awaited<ReturnType<typeof createClient>>, companyId?: string | null) {
+  let query = supabase
+    .from("projects")
+    .select("id,project_no,name_ar,company_id,project_type,group_no,subgroup_no,region_code,city_code")
+    .eq("is_active", true)
+    .order("region_code")
+    .order("project_no");
+
+  if (companyId) query = query.eq("company_id", companyId);
+
+  const result = await query;
+  if (!result.error) return { data: (result.data ?? []) as ProjectRow[], error: null };
+
+  const message = `${result.error.message} ${result.error.details ?? ""}`;
+  if (!message.includes("city_code")) return { data: [] as ProjectRow[], error: result.error };
+
+  let fallbackQuery = supabase
+    .from("projects")
+    .select("id,project_no,name_ar,company_id,project_type,group_no,subgroup_no,region_code")
+    .eq("is_active", true)
+    .order("region_code")
+    .order("project_no");
+
+  if (companyId) fallbackQuery = fallbackQuery.eq("company_id", companyId);
+
+  const fallback = await fallbackQuery;
+  return {
+    data: ((fallback.data ?? []) as ProjectRow[]).map((project) => ({ ...project, city_code: null })),
+    error: fallback.error
   };
-
-  if (!code) return labels["0"];
-  return labels[code] ?? code;
-}
-
-function slugPart(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9\u0600-\u06ff]+/gi, "-")
-    .replace(/^-+|-+$/g, "") || "item";
 }
 
 export default async function MenuPage({ params }: PageProps) {
@@ -79,7 +88,7 @@ export default async function MenuPage({ params }: PageProps) {
   const { data: permissions } = await supabase
     .from("role_menu_permissions")
     .select(
-      "can_create,can_update,can_delete,can_approve,menu_items(id,wbs_code,parent_wbs_code,slug,name_ar,full_path_ar,level,sort_order,group_no,subgroup_no,requires_project)"
+      "can_create,can_update,can_delete,can_approve,menu_items(id,wbs_code,parent_wbs_code,slug,name_ar,name_en,full_path_ar,level,sort_order,group_no,subgroup_no,requires_project)"
     )
     .eq("can_view", true)
     .in("role_id", roleIds);
@@ -123,28 +132,15 @@ export default async function MenuPage({ params }: PageProps) {
     return true;
   }
 
-  let electricalRegions: RegionCard[] = [];
   const allowedItems = Array.from(unique.values()).filter(hasAllowedAncestors);
-  const electricalRoot = allowedItems.find((row) => row.wbs_code === "0.1.1");
-  const electricalTemplates = allowedItems.filter((row) => row.wbs_code.startsWith("0.1.1.") && row.parent_wbs_code);
-  let electricalProjects: any[] = [];
+  const hasProjectRoot = allowedItems.some((row) => row.wbs_code === "0.1.1" || row.wbs_code === "0.1.2.1" || row.wbs_code === "0.1.2.2");
+  let projectRows: ProjectRow[] = [];
+  let catalogRegions: CatalogRegion[] = [];
   let companies: Array<{ id: string; name_ar: string }> = [];
 
-  if (electricalRoot) {
-    let projectsQuery = supabase
-      .from("projects")
-      .select("id,project_no,name_ar,company_id,region_code")
-      .eq("is_active", true)
-      .eq("project_type", "electrical")
-      .order("region_code")
-      .order("project_no");
-
-    if (!isSuperAdmin && profile?.company_id) {
-      projectsQuery = projectsQuery.eq("company_id", profile.company_id);
-    }
-
-    const [{ data: projectRows }, { data: companyRows }, { data: catalogRegions }] = await Promise.all([
-      projectsQuery,
+  if (hasProjectRoot) {
+    const [{ data: projects, error: projectsError }, { data: companyRows }, { data: regionRows }] = await Promise.all([
+      fetchActiveProjects(supabase, !isSuperAdmin ? profile?.company_id : null),
       supabase.from("companies").select("id,name_ar").order("group_no"),
       supabase
         .from("menu_items")
@@ -154,93 +150,35 @@ export default async function MenuPage({ params }: PageProps) {
         .order("sort_order")
     ]);
 
-    electricalProjects = projectRows ?? [];
+    if (projectsError) {
+      notFound();
+    }
+
+    projectRows = projects ?? [];
+    catalogRegions = (regionRows ?? []) as CatalogRegion[];
     companies = companyRows ?? [];
-
-    const groupedRegions = new Map<string, RegionCard>();
-
-    for (const region of catalogRegions ?? []) {
-      const code = (region as any).wbs_code.replace("catalog.regions.", "");
-      groupedRegions.set(code, { code, name: (region as any).name_ar, count: 0 });
-    }
-
-    for (const project of electricalProjects) {
-      const code = (project as any).region_code || "0";
-      const current = groupedRegions.get(code) ?? { code, name: regionName(code), count: 0 };
-      current.count += 1;
-      groupedRegions.set(code, current);
-    }
-
-    electricalRegions = Array.from(groupedRegions.values()).sort((a, b) => a.name.localeCompare(b.name, "ar"));
   }
 
-  let item = allowedItems.find((row) => row.slug === currentSlug);
-
-  if (!item && electricalRoot) {
-    const region = electricalRegions.find((entry) => currentSlug === `electrical-region-${slugPart(entry.code)}`);
-    if (region) {
-      item = {
-        ...electricalRoot,
-        id: `electrical-region-${region.code}`,
-        wbs_code: `${electricalRoot.wbs_code}.region`,
-        parent_wbs_code: electricalRoot.wbs_code,
-        name_ar: region.name,
-        name_en: null,
-        slug: currentSlug,
-        full_path_ar: `${electricalRoot.full_path_ar} > ${region.name}`,
-        level: electricalRoot.level + 1,
-        requires_project: false
-      };
-    }
-  }
-
-  if (!item && electricalRoot) {
-    const project = electricalProjects.find((row) => currentSlug === `electrical-project-${slugPart(row.project_no || row.name_ar)}`);
-    if (project) {
-      const regionLabel = regionName(project.region_code);
-      const projectNo = project.project_no || project.name_ar;
-      item = {
-        ...electricalRoot,
-        id: `electrical-project-${project.id}`,
-        wbs_code: `${electricalRoot.wbs_code}.project`,
-        parent_wbs_code: `${electricalRoot.wbs_code}.region`,
-        name_ar: projectNo,
-        name_en: null,
-        slug: currentSlug,
-        full_path_ar: `${electricalRoot.full_path_ar} > ${regionLabel} > ${projectNo}`,
-        level: electricalRoot.level + 2,
-        requires_project: true
-      };
-    }
-  }
-
-  if (!item && electricalRoot && currentSlug.includes("-project-")) {
-    const marker = "-project-";
-    const markerIndex = currentSlug.indexOf(marker);
-    const baseSlug = currentSlug.slice(0, markerIndex);
-    const projectPart = currentSlug.slice(markerIndex + marker.length);
-    const template = electricalTemplates.find((row) => row.slug === baseSlug);
-    const project = electricalProjects.find((row) => slugPart(row.project_no || row.name_ar) === projectPart);
-
-    if (template && project) {
-      const regionLabel = regionName(project.region_code);
-      const projectNo = project.project_no || project.name_ar;
-      const templatePathSuffix = template.full_path_ar.replace(`${electricalRoot.full_path_ar} > `, "");
-      item = {
-        ...template,
-        id: `${template.id}-${project.id}`,
-        wbs_code: `${electricalRoot.wbs_code}.project.${template.wbs_code}`,
-        parent_wbs_code: `${electricalRoot.wbs_code}.project.${template.parent_wbs_code}`,
-        slug: currentSlug,
-        full_path_ar: `${electricalRoot.full_path_ar} > ${regionLabel} > ${projectNo} > ${templatePathSuffix}`,
-        level: electricalRoot.level + 2 + (template.level - electricalRoot.level)
-      };
-    }
-  }
+  const { syntheticRows, transformedRootCodes } = buildProjectMenuRows({
+    baseRows: allowedItems,
+    projects: projectRows,
+    catalogRegions
+  });
+  const searchableItems = [...removeTransformedProjectDescendants(allowedItems, transformedRootCodes), ...syntheticRows];
+  const item = searchableItems.find((row) => row.slug === currentSlug);
 
   if (!item) {
     notFound();
   }
+
+  const electricalRegions: RegionCard[] = catalogRegions.map((region) => {
+    const code = region.wbs_code.replace("catalog.regions.", "");
+    return {
+      code,
+      name: region.name_ar,
+      count: projectRows.filter((project) => projectMatchesConfig(project, { rootCode: "0.1.1", slugPrefix: "electrical", kind: "electrical" }) && (project.region_code || "0") === code).length
+    };
+  });
 
   return (
     <main className="content-page">
@@ -260,9 +198,7 @@ export default async function MenuPage({ params }: PageProps) {
         </div>
       </section>
 
-      {item.slug === "electrical-projects" ? (
-        <ElectricalProjectsClient companies={companies} regions={electricalRegions} />
-      ) : null}
+      {item.slug === "electrical-projects" ? <ElectricalProjectsClient companies={companies} regions={electricalRegions} /> : null}
       {item.slug.startsWith("menu-0-1-1-9-3-1") ? <RegionsManagerClient /> : null}
     </main>
   );

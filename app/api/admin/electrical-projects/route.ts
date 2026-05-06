@@ -50,6 +50,7 @@ export async function POST(request: Request) {
   const projectNo = typeof body.project_no === "string" ? body.project_no.trim() : "";
   const nameAr = typeof body.name_ar === "string" ? body.name_ar.trim() : "";
   const regionCode = typeof body.region_code === "string" && body.region_code.trim() ? body.region_code.trim() : "0";
+  const cityCode = typeof body.city_code === "string" && body.city_code.trim() ? body.city_code.trim() : null;
 
   if (!companyId || !projectNo || !nameAr) {
     return NextResponse.json({ error: "الشركة ورقم المشروع واسم المشروع مطلوبة." }, { status: 400 });
@@ -70,20 +71,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "رقم المشروع موجود مسبقا." }, { status: 400 });
   }
 
-  const { data: project, error: projectError } = await admin
+  const projectPayload = {
+    company_id: companyId,
+    project_no: projectNo,
+    name_ar: nameAr,
+    project_type: "electrical",
+    group_no: 1,
+    subgroup_no: null,
+    region_code: regionCode,
+    ...(cityCode ? { city_code: cityCode } : {}),
+    is_active: true
+  };
+
+  let insertResult = await admin
     .from("projects")
-    .insert({
-      company_id: companyId,
-      project_no: projectNo,
-      name_ar: nameAr,
-      project_type: "electrical",
-      group_no: 1,
-      subgroup_no: null,
-      region_code: regionCode,
-      is_active: true
-    })
+    .insert(projectPayload)
     .select("id")
     .single();
+
+  if (insertResult.error && cityCode && `${insertResult.error.message} ${insertResult.error.details ?? ""}`.includes("city_code")) {
+    const fallbackPayload = { ...projectPayload };
+    delete (fallbackPayload as { city_code?: string }).city_code;
+    insertResult = await admin.from("projects").insert(fallbackPayload).select("id").single();
+  }
+
+  const { data: project, error: projectError } = insertResult;
 
   if (projectError || !project) {
     return NextResponse.json({ error: projectError?.message ?? "تعذر إضافة مشروع الكهرباء." }, { status: 500 });

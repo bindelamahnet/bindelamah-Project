@@ -1,7 +1,8 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { Plus } from "lucide-react";
+import { defaultCityForRegion } from "@/lib/erp/project-menu";
 
 type Company = {
   id: string;
@@ -15,28 +16,22 @@ type RegionCard = {
 };
 
 const knownRegions = [
-  { code: "jazan", name: "جازان" },
-  { code: "makkah", name: "مكة المكرمة" },
   { code: "riyadh", name: "الرياض" },
-  { code: "eastern", name: "المنطقة الشرقية" },
+  { code: "makkah", name: "مكة المكرمة" },
   { code: "madinah", name: "المدينة المنورة" },
-  { code: "qassim", name: "القصيم" },
+  { code: "eastern", name: "الشرقية" },
   { code: "aseer", name: "عسير" },
+  { code: "qassim", name: "القصيم" },
   { code: "tabuk", name: "تبوك" },
   { code: "hail", name: "حائل" },
-  { code: "northern_borders", name: "الحدود الشمالية" },
   { code: "jawf", name: "الجوف" },
+  { code: "jazan", name: "جازان" },
+  { code: "najran", name: "نجران" },
   { code: "baha", name: "الباحة" },
-  { code: "najran", name: "نجران" }
+  { code: "northern_borders", name: "الحدود الشمالية" }
 ];
 
-export default function ElectricalProjectsClient({
-  companies,
-  regions
-}: {
-  companies: Company[];
-  regions: RegionCard[];
-}) {
+export default function ElectricalProjectsClient({ companies, regions }: { companies: Company[]; regions: RegionCard[] }) {
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -46,8 +41,10 @@ export default function ElectricalProjectsClient({
     project_no: "",
     name_ar: "",
     region_code: knownRegions[0].code,
-    new_region_code: ""
+    city_code: defaultCityForRegion(knownRegions[0].code).code
   });
+
+  const selectedCity = useMemo(() => defaultCityForRegion(form.region_code), [form.region_code]);
 
   async function submitProject(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -55,11 +52,10 @@ export default function ElectricalProjectsClient({
     setError("");
     setNotice("");
 
-    const regionCode = form.new_region_code.trim() || form.region_code;
     const response = await fetch("/api/admin/electrical-projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, region_code: regionCode })
+      body: JSON.stringify({ ...form, city_code: form.city_code || selectedCity.code })
     });
     const data = await response.json().catch(() => ({}));
 
@@ -70,7 +66,7 @@ export default function ElectricalProjectsClient({
     }
 
     setNotice("تمت إضافة مشروع الكهرباء بنجاح. سيتم تحديث القائمة بعد إعادة تحميل الصفحة.");
-    setForm({ ...form, project_no: "", name_ar: "", new_region_code: "" });
+    setForm({ ...form, project_no: "", name_ar: "", city_code: selectedCity.code });
     setSaving(false);
     window.location.reload();
   }
@@ -80,7 +76,7 @@ export default function ElectricalProjectsClient({
       <div className="section-title-row">
         <div>
           <h3>مناطق مشاريع الكهرباء</h3>
-          <p>تظهر هنا المناطق المرتبطة فقط بمشاريع الكهرباء النشطة. إضافة مشروع بمنطقة جديدة تضيف المنطقة للشجرة.</p>
+          <p>تظهر هنا المناطق المرتبطة بمشاريع الكهرباء النشطة، وتظهر المشاريع داخل المدينة التابعة للمنطقة.</p>
         </div>
         <button type="button" className="button" onClick={() => setShowForm((value) => !value)}>
           <Plus size={18} />
@@ -110,7 +106,10 @@ export default function ElectricalProjectsClient({
             <select
               id="region_code"
               value={form.region_code}
-              onChange={(event) => setForm({ ...form, region_code: event.target.value })}
+              onChange={(event) => {
+                const city = defaultCityForRegion(event.target.value);
+                setForm({ ...form, region_code: event.target.value, city_code: city.code });
+              }}
             >
               {knownRegions.map((region) => (
                 <option key={region.code} value={region.code}>
@@ -120,12 +119,13 @@ export default function ElectricalProjectsClient({
             </select>
           </div>
           <div className="field">
-            <label htmlFor="new_region_code">منطقة جديدة</label>
+            <label htmlFor="city_code">المدينة *</label>
             <input
-              id="new_region_code"
-              value={form.new_region_code}
-              onChange={(event) => setForm({ ...form, new_region_code: event.target.value })}
-              placeholder="مثال: نجران أو north_area"
+              id="city_code"
+              value={form.city_code}
+              onChange={(event) => setForm({ ...form, city_code: event.target.value })}
+              placeholder={selectedCity.name}
+              required
             />
           </div>
           <div className="field">
@@ -140,12 +140,7 @@ export default function ElectricalProjectsClient({
           </div>
           <div className="field permissions-wide-field">
             <label htmlFor="name_ar">اسم المشروع *</label>
-            <input
-              id="name_ar"
-              value={form.name_ar}
-              onChange={(event) => setForm({ ...form, name_ar: event.target.value })}
-              required
-            />
+            <input id="name_ar" value={form.name_ar} onChange={(event) => setForm({ ...form, name_ar: event.target.value })} required />
           </div>
           <div className="permissions-form-actions">
             <button type="submit" className="button" disabled={saving}>

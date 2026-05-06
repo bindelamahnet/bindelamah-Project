@@ -2,12 +2,60 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { ChevronDown, ChevronLeft, LogOut, Settings } from "lucide-react";
 import type { MenuNode } from "@/lib/erp/types";
 import { createClient } from "@/lib/supabase/client";
 
-function MenuItem({ item }: { item: MenuNode }) {
-  const [open, setOpen] = useState(item.level <= 2);
+function findPathToKey(nodes: MenuNode[], key: string, path: string[] = []): string[] {
+  for (const node of nodes) {
+    const nextPath = [...path, node.wbs_code];
+    if (node.wbs_code === key) return nextPath;
+    const childPath = findPathToKey(node.children, key, nextPath);
+    if (childPath.length) return childPath;
+  }
+  return [];
+}
+
+function findPathToSlug(nodes: MenuNode[], slug?: string, path: string[] = []): string[] {
+  if (!slug) return [];
+  for (const node of nodes) {
+    const nextPath = [...path, node.wbs_code];
+    if (node.slug === slug) return nextPath;
+    const childPath = findPathToSlug(node.children, slug, nextPath);
+    if (childPath.length) return childPath;
+  }
+  return [];
+}
+
+function collectDescendantKeys(item: MenuNode): string[] {
+  return item.children.flatMap((child) => [child.wbs_code, ...collectDescendantKeys(child)]);
+}
+
+function defaultOpenKeys(nodes: MenuNode[]) {
+  const keys = new Set<string>();
+  const visit = (items: MenuNode[]) => {
+    for (const item of items) {
+      if (item.level <= 2) keys.add(item.wbs_code);
+      visit(item.children);
+    }
+  };
+  visit(nodes);
+  return keys;
+}
+
+function MenuItem({
+  item,
+  openKeys,
+  onBranchToggle,
+  onLeafSelect
+}: {
+  item: MenuNode;
+  openKeys: Set<string>;
+  onBranchToggle: (item: MenuNode) => void;
+  onLeafSelect: (item: MenuNode) => void;
+}) {
+  const open = openKeys.has(item.wbs_code);
   const hasChildren = item.children.length > 0;
   const href = `/dashboard/${item.slug}`;
   const centeredCodes = new Set(["0.1.1", "0.1.2"]);
@@ -19,14 +67,14 @@ function MenuItem({ item }: { item: MenuNode }) {
         <button
           type="button"
           className={`menu-button${itemClassName}`}
-          onClick={() => setOpen((value) => !value)}
+          onClick={() => onBranchToggle(item)}
           title={item.full_path_ar}
         >
           <span>{item.name_ar}</span>
           {open ? <ChevronDown size={16} /> : <ChevronLeft size={16} />}
         </button>
       ) : (
-        <Link href={href} className={`menu-link${itemClassName}`} title={item.full_path_ar}>
+        <Link href={href} className={`menu-link${itemClassName}`} title={item.full_path_ar} onClick={() => onLeafSelect(item)}>
           <span>{item.name_ar}</span>
         </Link>
       )}
@@ -34,7 +82,13 @@ function MenuItem({ item }: { item: MenuNode }) {
       {hasChildren && open ? (
         <div className="menu-children">
           {item.children.map((child) => (
-            <MenuItem key={child.id} item={child} />
+            <MenuItem
+              key={child.id}
+              item={child}
+              openKeys={openKeys}
+              onBranchToggle={onBranchToggle}
+              onLeafSelect={onLeafSelect}
+            />
           ))}
         </div>
       ) : null}
@@ -43,7 +97,9 @@ function MenuItem({ item }: { item: MenuNode }) {
 }
 
 export default function Sidebar() {
+  const pathname = usePathname();
   const [menu, setMenu] = useState<MenuNode[]>([]);
+  const [openKeys, setOpenKeys] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -57,6 +113,32 @@ export default function Sidebar() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!menu.length) return;
+
+    const parts = pathname.split("/").filter(Boolean);
+    const activeSlug = parts[0] === "dashboard" && parts.length > 1 ? parts.at(-1) : undefined;
+    const activePath = findPathToSlug(menu, activeSlug);
+    setOpenKeys(activePath.length ? new Set(activePath) : defaultOpenKeys(menu));
+  }, [menu, pathname]);
+
+  function handleBranchToggle(item: MenuNode) {
+    setOpenKeys((current) => {
+      if (current.has(item.wbs_code)) {
+        const next = new Set(current);
+        next.delete(item.wbs_code);
+        for (const descendant of collectDescendantKeys(item)) next.delete(descendant);
+        return next;
+      }
+
+      return new Set(findPathToKey(menu, item.wbs_code));
+    });
+  }
+
+  function handleLeafSelect(item: MenuNode) {
+    setOpenKeys(new Set(findPathToKey(menu, item.wbs_code)));
+  }
 
   async function signOut() {
     const supabase = createClient();
@@ -80,7 +162,13 @@ export default function Sidebar() {
       {!loading && !error ? (
         <nav className="menu-tree" aria-label="قائمة نظام BDCC ERP">
           {menu.map((item) => (
-            <MenuItem key={item.id} item={item} />
+            <MenuItem
+              key={item.id}
+              item={item}
+              openKeys={openKeys}
+              onBranchToggle={handleBranchToggle}
+              onLeafSelect={handleLeafSelect}
+            />
           ))}
         </nav>
       ) : null}

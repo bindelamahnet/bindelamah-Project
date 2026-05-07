@@ -30,37 +30,35 @@ export const PROJECT_MENU_CONFIGS: ProjectMenuConfig[] = [
   { rootCode: "0.1.2.2", slugPrefix: "university", kind: "university" }
 ];
 
-const projectHomeOrder = [
-  "إدارة الموارد",
-  "مدير المشاريع",
-  "القسم الفني",
-  "موظف سكيكو",
-  "إدارة المستودع",
-  "إحصائيات",
-  "الإدارة",
-  "الملف الشخصي"
-];
+const projectHomeSections = [
+  { code: "0.1.1.3", label: "إدارة الموارد" },
+  { code: "0.1.1.2", label: "مدير المشاريع" },
+  { code: "0.1.1.1", label: "القسم الفني" },
+  { code: "0.1.1.5", label: "موظف سكيكو" },
+  { code: "0.1.1.7", label: "إدارة المستودع" },
+  { code: "0.1.1.8", label: "إحصائيات" },
+  { code: "0.1.1.9", label: "الإدارة" },
+  { code: "0.1.1.10", label: "الملف الشخصي" }
+] as const;
 
-const projectHomeNameOverrides: Record<string, string> = {
-  "0.1.1.3": "إدارة الموارد",
-  "0.1.1.8": "إحصائيات",
-  "0.1.1.10": "الملف الشخصي"
-};
+type ProjectHomeCode = (typeof projectHomeSections)[number]["code"];
+
+const projectHomeOrder = new Map<ProjectHomeCode, number>(projectHomeSections.map((entry, index) => [entry.code, index] as const));
+const projectHomeNameOverrides = new Map<ProjectHomeCode, string>(projectHomeSections.map((entry) => [entry.code, entry.label] as const));
 
 function projectHomeDisplayName(template: MenuRow) {
-  return projectHomeNameOverrides[template.wbs_code] ?? template.name_ar;
+  return projectHomeNameOverrides.get(template.wbs_code as ProjectHomeCode) ?? template.name_ar;
 }
 
 function projectHomeSortRank(template: MenuRow) {
-  const displayName = projectHomeDisplayName(template);
-  const rank = projectHomeOrder.indexOf(displayName);
-  return rank === -1 ? projectHomeOrder.length + template.sort_order : rank;
+  const rank = projectHomeOrder.get(template.wbs_code as ProjectHomeCode);
+  return rank === undefined ? projectHomeSections.length + template.sort_order : rank;
 }
 
 function projectHomePathSuffix(template: MenuRow, rootCode: string, rootPath: string) {
   const suffix = template.full_path_ar.replace(`${rootPath} > `, "");
   const topLevelCode = `${rootCode}.${template.wbs_code.replace(`${rootCode}.`, "").split(".")[0]}`;
-  const override = projectHomeNameOverrides[topLevelCode];
+  const override = projectHomeNameOverrides.get(topLevelCode as ProjectHomeCode);
   if (!override) return suffix;
   const parts = suffix.split(" > ");
   parts[0] = override;

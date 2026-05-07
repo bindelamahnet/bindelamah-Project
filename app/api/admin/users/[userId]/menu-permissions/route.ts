@@ -11,6 +11,8 @@ type RoleJoin = {
   roles: { id: string; code: string; name_ar: string } | { id: string; code: string; name_ar: string }[] | null;
 };
 
+const actionPermissionKeys = ["can_create", "can_update", "can_delete", "can_approve"] as const;
+
 async function requireSuperAdmin() {
   const supabase = await createClient();
   const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -138,7 +140,11 @@ export async function GET(_request: Request, { params }: RouteProps) {
 
   const menu = (menuItems ?? []).map((item: any) => ({
     ...item,
-    can_view: Boolean(permissionMap.get(item.id)?.can_view)
+    can_view: Boolean(permissionMap.get(item.id)?.can_view),
+    can_create: Boolean(permissionMap.get(item.id)?.can_create),
+    can_update: Boolean(permissionMap.get(item.id)?.can_update),
+    can_delete: Boolean(permissionMap.get(item.id)?.can_delete),
+    can_approve: Boolean(permissionMap.get(item.id)?.can_approve)
   }));
 
   return NextResponse.json({ user: target.user, menu });
@@ -168,9 +174,52 @@ export async function PUT(request: Request, { params }: RouteProps) {
 
   const body = await request.json();
   const requestedPermissions = Array.isArray(body.permissions) ? body.permissions : [];
-  const allowedIds = requestedPermissions
+  const requestedAllowedPermissions = requestedPermissions
     .filter((permission: any) => typeof permission.menu_item_id === "string" && permission.can_view === true)
-    .map((permission: any) => permission.menu_item_id);
+    .map((permission: any) => ({
+      menu_item_id: permission.menu_item_id,
+      can_create: Boolean(permission.can_create),
+      can_update: Boolean(permission.can_update),
+      can_delete: Boolean(permission.can_delete),
+      can_approve: Boolean(permission.can_approve)
+    }));
+
+  const { data: menuRows, error: menuRowsError } = await admin
+    .from("menu_items")
+    .select("id,wbs_code,parent_wbs_code")
+    .eq("is_active", true);
+
+  if (menuRowsError) {
+    return NextResponse.json({ error: menuRowsError.message }, { status: 500 });
+  }
+
+  const menuById = new Map((menuRows ?? []).map((item: any) => [item.id, item]));
+  const menuByCode = new Map((menuRows ?? []).map((item: any) => [item.wbs_code, item]));
+  const permissionById = new Map(requestedAllowedPermissions.map((permission: any) => [permission.menu_item_id, permission]));
+
+  const allowedPermissions = requestedAllowedPermissions.map((permission: any) => {
+    const next = { ...permission };
+    let parentCode = menuById.get(permission.menu_item_id)?.parent_wbs_code ?? null;
+
+    while (parentCode) {
+      const parent = menuByCode.get(parentCode);
+      const parentPermission = parent ? permissionById.get(parent.id) : null;
+
+      if (!parentPermission) {
+        return { ...next, can_create: false, can_update: false, can_delete: false, can_approve: false, can_view: false };
+      }
+
+      for (const key of actionPermissionKeys) {
+        if (!(parentPermission as any)[key]) {
+          next[key] = false;
+        }
+      }
+
+      parentCode = parent?.parent_wbs_code ?? null;
+    }
+
+    return next;
+  }).filter((permission: any) => permission.can_view !== false);
 
   const roleCode = userRoleCode(userId);
   const roleName = `صلاحيات ${target.user.full_name || target.user.email || userId}`;
@@ -199,15 +248,15 @@ export async function PUT(request: Request, { params }: RouteProps) {
     return NextResponse.json({ error: deletePermissionsError.message }, { status: 500 });
   }
 
-  if (allowedIds.length) {
-    const rows = allowedIds.map((menuItemId: string) => ({
+  if (allowedPermissions.length) {
+    const rows = allowedPermissions.map((permission: any) => ({
       role_id: role.id,
-      menu_item_id: menuItemId,
+      menu_item_id: permission.menu_item_id,
       can_view: true,
-      can_create: false,
-      can_update: false,
-      can_delete: false,
-      can_approve: false
+      can_create: permission.can_create,
+      can_update: permission.can_update,
+      can_delete: permission.can_delete,
+      can_approve: permission.can_approve
     }));
     const { error: insertPermissionsError } = await admin.from("role_menu_permissions").insert(rows);
 

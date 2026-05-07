@@ -21,12 +21,25 @@ type MenuPermission = {
   level: number;
   sort_order: number;
   can_view: boolean;
+  can_create: boolean;
+  can_update: boolean;
+  can_delete: boolean;
+  can_approve: boolean;
 };
 
 type Section = {
   root: MenuPermission;
   items: MenuPermission[];
 };
+
+type PermissionKey = "can_create" | "can_update" | "can_delete" | "can_approve";
+
+const actionPermissions: Array<{ key: PermissionKey; label: string }> = [
+  { key: "can_create", label: "إضافة" },
+  { key: "can_update", label: "تعديل" },
+  { key: "can_delete", label: "حذف" },
+  { key: "can_approve", label: "اعتماد" }
+];
 
 export default function MenuPermissionsClient({ userId }: { userId: string }) {
   const [user, setUser] = useState<UserSummary | null>(null);
@@ -95,7 +108,14 @@ export default function MenuPermissionsClient({ userId }: { userId: string }) {
     setMenu((items) =>
       items.map((item) => {
         if (!sectionCode || item.wbs_code === sectionCode || item.wbs_code.startsWith(`${sectionCode}.`)) {
-          return { ...item, can_view: canView };
+          return {
+            ...item,
+            can_view: canView,
+            can_create: canView ? item.can_create : false,
+            can_update: canView ? item.can_update : false,
+            can_delete: canView ? item.can_delete : false,
+            can_approve: canView ? item.can_approve : false
+          };
         }
         return item;
       })
@@ -105,15 +125,33 @@ export default function MenuPermissionsClient({ userId }: { userId: string }) {
   function normalizeHierarchy(items: MenuPermission[]) {
     const itemByCode = new Map(items.map((item) => [item.wbs_code, item]));
     return items.map((item) => {
+      const next = { ...item };
+      if (!next.can_view) {
+        next.can_create = false;
+        next.can_update = false;
+        next.can_delete = false;
+        next.can_approve = false;
+      }
+
       let parentCode = item.parent_wbs_code;
       while (parentCode) {
         const parent = itemByCode.get(parentCode);
         if (!parent?.can_view) {
-          return { ...item, can_view: false };
+          next.can_view = false;
+          next.can_create = false;
+          next.can_update = false;
+          next.can_delete = false;
+          next.can_approve = false;
+          return next;
+        }
+        for (const action of actionPermissions) {
+          if (!parent[action.key]) {
+            next[action.key] = false;
+          }
         }
         parentCode = parent.parent_wbs_code;
       }
-      return item;
+      return next;
     });
   }
 
@@ -137,7 +175,14 @@ export default function MenuPermissionsClient({ userId }: { userId: string }) {
         const isDescendant = item.wbs_code.startsWith(`${target.wbs_code}.`);
 
         if (!nextCanView && (isTarget || isDescendant)) {
-          return { ...item, can_view: false };
+          return {
+            ...item,
+            can_view: false,
+            can_create: false,
+            can_update: false,
+            can_delete: false,
+            can_approve: false
+          };
         }
 
         if (nextCanView && (isTarget || ancestors.has(item.wbs_code))) {
@@ -151,16 +196,58 @@ export default function MenuPermissionsClient({ userId }: { userId: string }) {
     });
   }
 
+  function toggleAction(menuItemId: string, key: PermissionKey) {
+    setMenu((items) => {
+      const target = items.find((item) => item.id === menuItemId);
+      if (!target || !target.can_view) return items;
+
+      const nextValue = !target[key];
+      const ancestors = new Set<string>();
+      const itemByCode = new Map(items.map((item) => [item.wbs_code, item]));
+      let parentCode = target.parent_wbs_code;
+
+      while (parentCode) {
+        ancestors.add(parentCode);
+        parentCode = itemByCode.get(parentCode)?.parent_wbs_code ?? null;
+      }
+
+      const updated = items.map((item) => {
+        const isTarget = item.id === target.id;
+        const isDescendant = item.wbs_code.startsWith(`${target.wbs_code}.`);
+
+        if (!nextValue && (isTarget || isDescendant)) {
+          return { ...item, [key]: false };
+        }
+
+        if (nextValue && (isTarget || ancestors.has(item.wbs_code))) {
+          return { ...item, can_view: true, [key]: true };
+        }
+
+        return item;
+      });
+
+      return normalizeHierarchy(updated);
+    });
+  }
+
   async function savePermissions() {
     setSaving(true);
     setError("");
     setNotice("");
+    const normalizedMenu = normalizeHierarchy(menu);
 
     const response = await fetch(`/api/admin/users/${userId}/menu-permissions`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        permissions: normalizeHierarchy(menu).map((item) => ({ menu_item_id: item.id, can_view: item.can_view }))
+        permissions: normalizedMenu.map((item) => ({
+          menu_item_id: item.id,
+          can_view: item.can_view,
+          can_create: item.can_create,
+          can_update: item.can_update,
+          can_delete: item.can_delete,
+          can_approve: item.can_approve
+        }))
       })
     });
     const data = await response.json().catch(() => ({}));
@@ -172,7 +259,8 @@ export default function MenuPermissionsClient({ userId }: { userId: string }) {
     }
 
     setNotice("تم حفظ صلاحيات المستخدم بنجاح.");
-    setOriginalMenu(menu);
+    setMenu(normalizedMenu);
+    setOriginalMenu(normalizedMenu);
     setSaving(false);
   }
 
@@ -269,6 +357,21 @@ export default function MenuPermissionsClient({ userId }: { userId: string }) {
                         <b className={item.can_view ? "state-allowed" : "state-blocked"}>
                           {item.can_view ? "مسموح" : "محجوب"}
                         </b>
+                        {item.can_view ? (
+                          <div className="permission-action-pills" aria-label="صلاحيات الإجراءات">
+                            {actionPermissions.map((action) => (
+                              <button
+                                type="button"
+                                key={action.key}
+                                className={`permission-action-pill ${item[action.key] ? "is-active" : ""}`}
+                                aria-pressed={item[action.key]}
+                                onClick={() => toggleAction(item.id, action.key)}
+                              >
+                                {action.label}
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   ))}

@@ -1346,7 +1346,7 @@ body {
 
 .permission-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 160px;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, auto);
   align-items: center;
   gap: 14px;
   min-height: 76px;
@@ -1381,6 +1381,32 @@ body {
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
+}
+
+.permission-action-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.permission-action-pill {
+  min-height: 40px;
+  border: 1px solid #b6efcf;
+  border-radius: 8px;
+  background: #effdf5;
+  color: #04713e;
+  padding: 0 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.permission-action-pill.is-active {
+  border-color: var(--success);
+  background: var(--success);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(7, 129, 74, 0.16);
 }
 
 .permission-toggle {

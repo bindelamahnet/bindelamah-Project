@@ -39,11 +39,15 @@ function defaultOpenKeys(nodes: MenuNode[]) {
 function MenuItem({
   item,
   openKeys,
+  activeKeys,
+  activeKey,
   onBranchToggle,
   onLeafSelect
 }: {
   item: MenuNode;
   openKeys: Set<string>;
+  activeKeys: Set<string>;
+  activeKey?: string;
   onBranchToggle: (item: MenuNode) => void;
   onLeafSelect: (item: MenuNode) => void;
 }) {
@@ -51,13 +55,22 @@ function MenuItem({
   const hasChildren = item.children.length > 0;
   const href = `/dashboard/${item.slug}`;
   const centeredCodes = new Set(["0.1.1", "0.1.2"]);
-  const itemClassName = centeredCodes.has(item.wbs_code) ? " menu-item-centered" : "";
+  const isActive = activeKey === item.wbs_code;
+  const isActiveAncestor = activeKeys.has(item.wbs_code) && !isActive;
+  const itemClassName = [
+    centeredCodes.has(item.wbs_code) ? "menu-item-centered" : "",
+    isActive ? "menu-item-active" : "",
+    isActiveAncestor ? "menu-item-active-parent" : ""
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const itemClasses = itemClassName ? ` ${itemClassName}` : "";
   const isProjectHome = item.slug.endsWith("-home");
 
   return (
     <div className="menu-branch">
       {hasChildren && isProjectHome ? (
-        <div className={`menu-linkable-branch${itemClassName}`} title={item.full_path_ar}>
+        <div className={`menu-linkable-branch${itemClasses}`} title={item.full_path_ar}>
           <Link href={href} onClick={() => onLeafSelect(item)}>
             <span>{item.name_ar}</span>
           </Link>
@@ -68,7 +81,7 @@ function MenuItem({
       ) : hasChildren ? (
         <button
           type="button"
-          className={`menu-button${itemClassName}`}
+          className={`menu-button${itemClasses}`}
           onClick={() => onBranchToggle(item)}
           title={item.full_path_ar}
         >
@@ -76,18 +89,20 @@ function MenuItem({
           {open ? <ChevronDown size={16} /> : <ChevronLeft size={16} />}
         </button>
       ) : (
-        <Link href={href} className={`menu-link${itemClassName}`} title={item.full_path_ar} onClick={() => onLeafSelect(item)}>
+        <Link href={href} className={`menu-link${itemClasses}`} title={item.full_path_ar} onClick={() => onLeafSelect(item)}>
           <span>{item.name_ar}</span>
         </Link>
       )}
 
       {hasChildren && open ? (
-        <div className="menu-children">
+        <div className={`menu-children${activeKeys.has(item.wbs_code) ? " menu-children-active" : ""}`}>
           {item.children.map((child) => (
             <MenuItem
               key={child.id}
               item={child}
               openKeys={openKeys}
+              activeKeys={activeKeys}
+              activeKey={activeKey}
               onBranchToggle={onBranchToggle}
               onLeafSelect={onLeafSelect}
             />
@@ -104,6 +119,11 @@ export default function Sidebar() {
   const [openKeys, setOpenKeys] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const parts = pathname.split("/").filter(Boolean);
+  const activeSlug = parts[0] === "dashboard" && parts.length > 1 ? parts.at(-1) : undefined;
+  const activePath = findPathToSlug(menu, activeSlug);
+  const activeKeys = new Set(activePath);
+  const activeKey = activePath.at(-1);
 
   useEffect(() => {
     fetch("/api/menu")
@@ -168,6 +188,8 @@ export default function Sidebar() {
               key={item.id}
               item={item}
               openKeys={openKeys}
+              activeKeys={activeKeys}
+              activeKey={activeKey}
               onBranchToggle={handleBranchToggle}
               onLeafSelect={handleLeafSelect}
             />

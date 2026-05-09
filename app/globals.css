@@ -330,6 +330,24 @@ select {
   color: var(--brand-dark);
 }
 
+.menu-button.menu-item-active,
+.menu-link.menu-item-active,
+.menu-linkable-branch.menu-item-active,
+.menu-button.menu-item-active-parent,
+.menu-link.menu-item-active-parent,
+.menu-linkable-branch.menu-item-active-parent {
+  background: #eaf5fb;
+  color: var(--brand-dark);
+  box-shadow: inset -3px 0 0 var(--brand);
+}
+
+.menu-button.menu-item-active,
+.menu-link.menu-item-active,
+.menu-linkable-branch.menu-item-active {
+  background: #dff0fa;
+  font-weight: 700;
+}
+
 .menu-button span,
 .menu-link span,
 .menu-linkable-branch span {
@@ -387,6 +405,16 @@ select {
   margin: 2px 0 6px;
   border-right: 0;
   padding-right: 0;
+}
+
+.menu-children-active {
+  border-radius: 8px;
+  background: #f5f7fa;
+  padding: 4px;
+}
+
+.menu-children-active .menu-children-active {
+  background: #eef2f6;
 }
 
 .sidebar-actions {

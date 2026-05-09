@@ -343,8 +343,9 @@ select {
 .menu-button:hover,
 .menu-link:hover,
 .menu-linkable-branch:hover {
-  background: #f2f4f7;
-  color: var(--brand-dark);
+  background: #fff1f1;
+  color: #8f1d1d;
+  box-shadow: inset -3px 0 0 rgba(207, 45, 48, 0.55);
 }
 
 .menu-button.menu-item-active,

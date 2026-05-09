@@ -31,6 +31,7 @@ export const PROJECT_MENU_CONFIGS: ProjectMenuConfig[] = [
 ];
 
 const projectHomeSections = [
+  { code: "0.1.1.6", label: "سلة المهام" },
   { code: "0.1.1.3", label: "إدارة الموارد" },
   { code: "0.1.1.2", label: "مدير المشاريع" },
   { code: "0.1.1.1", label: "القسم الفني" },

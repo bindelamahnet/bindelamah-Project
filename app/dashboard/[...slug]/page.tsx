@@ -2,15 +2,23 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   Activity,
+  CalendarDays,
   BriefcaseBusiness,
   CheckCircle2,
   Clock3,
   Droplets,
+  Eye,
+  FileText,
   FolderKanban,
+  Home,
   Network,
+  Pencil,
   PieChart,
+  PlusCircle,
+  Save,
   ShieldCheck,
   Users,
+  XCircle,
   Zap
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -27,6 +35,7 @@ import RegionsManagerClient from "./RegionsManagerClient";
 
 type PageProps = {
   params: Promise<{ slug: string[] }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 type RegionCard = {
@@ -44,6 +53,18 @@ type TaskBasketCard = {
   count: number;
   icon: typeof FolderKanban | typeof CheckCircle2;
   tone: "violet" | "gold";
+};
+
+type ContractRecord = {
+  id: string;
+  contractNo: string;
+  contractName: string;
+  regionName: string;
+  startDate: string;
+  endDate: string;
+  status: "نشط" | "معلق" | "منتهي";
+  workOrderCount: number;
+  notes: string;
 };
 
 const projectWorkTypeCards = [
@@ -72,6 +93,272 @@ function projectContextName(fullPath: string, sectionName: string) {
   const index = parts.lastIndexOf(sectionName);
   if (index > 0) return parts[index - 1];
   return parts.at(-2) ?? parts.at(-1) ?? sectionName;
+}
+
+function readProjectContext(fullPath: string) {
+  const parts = fullPath.split(" > ");
+  const homeIndex = parts.lastIndexOf("الرئيسية");
+
+  return {
+    projectName: homeIndex > 0 ? parts[homeIndex - 1] : parts.at(-1) ?? "المشروع الحالي",
+    cityName: homeIndex > 1 ? parts[homeIndex - 2] : "غير محدد",
+    regionName: homeIndex > 2 ? parts[homeIndex - 3] : "غير محدد"
+  };
+}
+
+function findProjectHomeRow(rows: MenuRow[], item: MenuRow) {
+  const rowsByCode = new Map(rows.map((row) => [row.wbs_code, row]));
+  let currentCode = item.parent_wbs_code;
+
+  while (currentCode) {
+    const parent = rowsByCode.get(currentCode);
+    if (!parent) break;
+    if (parent.wbs_code.endsWith(".home")) return parent;
+    currentCode = parent.parent_wbs_code;
+  }
+
+  return null;
+}
+
+function buildProjectContracts(projectName: string, regionName: string): ContractRecord[] {
+  const digits = (projectName.match(/\d+/)?.[0] ?? "100").slice(-3);
+
+  return [
+    {
+      id: `${projectName}-contract-1`,
+      contractNo: `CN-${digits}01`,
+      contractName: `عقد أعمال التشغيل - ${projectName}`,
+      regionName,
+      startDate: "2026-05-07",
+      endDate: "2026-12-31",
+      status: "نشط",
+      workOrderCount: 3,
+      notes: `عقد تشغيلي مرتبط بالمشروع ${projectName} في نطاق ${regionName}.`
+    },
+    {
+      id: `${projectName}-contract-2`,
+      contractNo: `CN-${digits}02`,
+      contractName: `عقد صيانة دورية - ${projectName}`,
+      regionName,
+      startDate: "2026-06-01",
+      endDate: "2026-11-30",
+      status: "نشط",
+      workOrderCount: 1,
+      notes: `متابعة أعمال الصيانة الوقائية الخاصة بالمشروع ${projectName}.`
+    },
+    {
+      id: `${projectName}-contract-3`,
+      contractNo: `CN-${digits}03`,
+      contractName: `عقد خدمات مساندة - ${projectName}`,
+      regionName,
+      startDate: "2026-04-15",
+      endDate: "2026-09-15",
+      status: "معلق",
+      workOrderCount: 0,
+      notes: `عقد خدمات مساندة بانتظار اعتماد نطاق التنفيذ للمشروع ${projectName}.`
+    }
+  ];
+}
+
+function ContractsPage({
+  item,
+  homeSlug,
+  contractRows,
+  projectName
+}: {
+  item: MenuRow;
+  homeSlug?: string;
+  contractRows: ContractRecord[];
+  projectName: string;
+}) {
+  return (
+    <section className="contracts-page" aria-label="العقود">
+      <header className="contracts-header">
+        <div>
+          <p>إدارة العقود الخاصة بالمشروع الحالي</p>
+          <h2>{item.name_ar}</h2>
+          <span>{projectName}</span>
+        </div>
+      </header>
+
+      <div className="contracts-toolbar">
+        {item.can_create ? (
+          <Link href={`/dashboard/${item.slug}?mode=new`} className="contracts-primary-link">
+            <PlusCircle size={18} />
+            عقد جديد
+          </Link>
+        ) : null}
+        {homeSlug ? (
+          <Link href={`/dashboard/${homeSlug}`} className="contracts-secondary-link">
+            <Home size={18} />
+            القائمة الرئيسية
+          </Link>
+        ) : null}
+      </div>
+
+      <section className="contracts-card">
+        <div className="contracts-table" role="table" aria-label="قائمة العقود">
+          <div className="contracts-table-head" role="row">
+            <span role="columnheader">رقم العقد</span>
+            <span role="columnheader">اسم العقد</span>
+            <span role="columnheader">تاريخ البداية</span>
+            <span role="columnheader">تاريخ النهاية</span>
+            <span role="columnheader">الحالة</span>
+            <span role="columnheader">عدد أوامر العمل</span>
+            <span role="columnheader">المنطقة</span>
+            <span role="columnheader">الإجراءات</span>
+          </div>
+
+          {contractRows.map((contract) => (
+            <div className="contracts-table-row" role="row" key={contract.id}>
+              <span role="cell" className="contracts-no">
+                {contract.contractNo}
+              </span>
+              <span role="cell" className="contracts-name">
+                {contract.contractName}
+              </span>
+              <span role="cell">{contract.startDate}</span>
+              <span role="cell">{contract.endDate}</span>
+              <span role="cell">
+                <i className={`contract-status is-${contract.status}`}>{contract.status}</i>
+              </span>
+              <span role="cell">{contract.workOrderCount}</span>
+              <span role="cell">{contract.regionName}</span>
+              <span role="cell">
+                <div className="contracts-actions">
+                  <Link href={`/dashboard/${item.slug}?contract=${contract.id}`} className="contracts-icon-link" aria-label={`عرض ${contract.contractName}`}>
+                    <Eye size={16} />
+                  </Link>
+                  {item.can_update ? (
+                    <Link
+                      href={`/dashboard/${item.slug}?mode=new&contract=${contract.id}`}
+                      className="contracts-icon-link contracts-icon-link-edit"
+                      aria-label={`تعديل ${contract.contractName}`}
+                    >
+                      <Pencil size={16} />
+                    </Link>
+                  ) : null}
+                </div>
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+    </section>
+  );
+}
+
+function ContractFormPage({
+  item,
+  homeSlug,
+  projectName,
+  regionName,
+  selectedContract
+}: {
+  item: MenuRow;
+  homeSlug?: string;
+  projectName: string;
+  regionName: string;
+  selectedContract?: ContractRecord;
+}) {
+  const formTitle = selectedContract ? "تحديث بيانات العقد" : "إضافة عقد جديد";
+
+  return (
+    <section className="contracts-page" aria-label={formTitle}>
+      <header className="contracts-header">
+        <div>
+          <p>نموذج عقد خاص بالمشروع الحالي فقط</p>
+          <h2>{formTitle}</h2>
+          <span>{projectName}</span>
+        </div>
+      </header>
+
+      <div className="contracts-toolbar">
+        <Link href={`/dashboard/${item.slug}`} className="contracts-secondary-link">
+          <FileText size={18} />
+          العودة إلى العقود
+        </Link>
+        {homeSlug ? (
+          <Link href={`/dashboard/${homeSlug}`} className="contracts-secondary-link">
+            <Home size={18} />
+            القائمة الرئيسية
+          </Link>
+        ) : null}
+      </div>
+
+      <section className="contracts-card contract-form-card">
+        <form className="contract-form-grid">
+          <div className="contract-field">
+            <label htmlFor="contractNo">رقم العقد *</label>
+            <input id="contractNo" name="contractNo" defaultValue={selectedContract?.contractNo ?? ""} />
+          </div>
+
+          <div className="contract-field">
+            <label htmlFor="contractRegion">المنطقة *</label>
+            <select id="contractRegion" name="contractRegion" defaultValue={regionName}>
+              <option value={regionName}>{regionName}</option>
+            </select>
+          </div>
+
+          <div className="contract-field">
+            <label htmlFor="contractName">اسم العقد *</label>
+            <input id="contractName" name="contractName" defaultValue={selectedContract?.contractName ?? ""} />
+          </div>
+
+          <div className="contract-field">
+            <label htmlFor="contractStartDate">تاريخ البداية *</label>
+            <div className="contract-date-wrap">
+              <input id="contractStartDate" name="contractStartDate" type="date" defaultValue={selectedContract?.startDate ?? ""} />
+              <CalendarDays size={18} />
+            </div>
+          </div>
+
+          <div className="contract-field">
+            <label htmlFor="contractEndDate">تاريخ النهاية *</label>
+            <div className="contract-date-wrap">
+              <input id="contractEndDate" name="contractEndDate" type="date" defaultValue={selectedContract?.endDate ?? ""} />
+              <CalendarDays size={18} />
+            </div>
+          </div>
+
+          <div className="contract-field">
+            <label htmlFor="contractStatus">الحالة *</label>
+            <select id="contractStatus" name="contractStatus" defaultValue={selectedContract?.status ?? "نشط"}>
+              <option value="نشط">نشط</option>
+              <option value="معلق">معلق</option>
+              <option value="منتهي">منتهي</option>
+            </select>
+          </div>
+
+          <div className="contract-field contract-field-full">
+            <label htmlFor="contractFile">ملف العقد (PDF)</label>
+            <input id="contractFile" name="contractFile" type="file" accept=".pdf" />
+          </div>
+
+          <div className="contract-field contract-field-full">
+            <label htmlFor="contractNotes">ملاحظات</label>
+            <textarea
+              id="contractNotes"
+              name="contractNotes"
+              rows={6}
+              defaultValue={selectedContract?.notes ?? `هذا العقد مرتبط بالمشروع ${projectName} ضمن نطاق ${regionName}.`}
+            />
+          </div>
+
+          <div className="contract-form-actions">
+            <Link href={`/dashboard/${item.slug}`} className="contracts-cancel-link">
+              <XCircle size={18} />
+              إلغاء
+            </Link>
+            <button type="button" className="contracts-primary-link">
+              <Save size={18} />
+              حفظ
+            </button>
+          </div>
+        </form>
+      </section>
+    </section>
+  );
 }
 
 function TaskBasketHome({
@@ -373,13 +660,21 @@ async function fetchActiveProjects(supabase: Awaited<ReturnType<typeof createCli
   };
 }
 
-export default async function MenuPage({ params }: PageProps) {
+export default async function MenuPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const resolvedSearchParams = (await searchParams) ?? {};
   const supabase = await createClient();
   const currentSlug = slug.at(-1);
   const detailSlug = slug.find((segment) => segment === "work-orders" || segment === "leave-approvals") as
     | TaskBasketView
     | undefined;
+  const contractMode = resolvedSearchParams.mode === "new" ? "new" : "list";
+  const requestedContractId =
+    typeof resolvedSearchParams.contract === "string"
+      ? resolvedSearchParams.contract
+      : Array.isArray(resolvedSearchParams.contract)
+        ? resolvedSearchParams.contract[0]
+        : undefined;
 
   const { data: authData, error: authError } = await supabase.auth.getUser();
   if (authError || !authData.user || !currentSlug) {
@@ -499,7 +794,12 @@ export default async function MenuPage({ params }: PageProps) {
   });
   const isProjectHome = item.slug.endsWith("-home") && item.name_ar === "الرئيسية";
   const isTaskBasketRoot = item.wbs_code.endsWith(".6") && item.parent_wbs_code?.endsWith(".home");
+  const isContractsPage = item.wbs_code.endsWith(".9.1.1");
   const currentProjectName = projectContextName(item.full_path_ar, "الرئيسية");
+  const { regionName: currentRegionName } = readProjectContext(item.full_path_ar);
+  const projectHomeRow = findProjectHomeRow(searchableItems, item);
+  const contractRows = isContractsPage ? buildProjectContracts(currentProjectName, currentRegionName) : [];
+  const selectedContract = contractRows.find((contract) => contract.id === requestedContractId);
   const taskBasketCards: TaskBasketCard[] = [
     {
       view: "work-orders",
@@ -532,6 +832,24 @@ export default async function MenuPage({ params }: PageProps) {
           />
         ) : (
           <TaskBasketHome basketTitle="سلة المهام" projectName={currentProjectName} cards={taskBasketCards} rootSlug={item.slug} />
+        )}
+      </main>
+    );
+  }
+
+  if (isContractsPage) {
+    return (
+      <main className="content-page">
+        {contractMode === "new" ? (
+          <ContractFormPage
+            item={item}
+            homeSlug={projectHomeRow?.slug}
+            projectName={currentProjectName}
+            regionName={currentRegionName}
+            selectedContract={selectedContract}
+          />
+        ) : (
+          <ContractsPage item={item} homeSlug={projectHomeRow?.slug} contractRows={contractRows} projectName={currentProjectName} />
         )}
       </main>
     );

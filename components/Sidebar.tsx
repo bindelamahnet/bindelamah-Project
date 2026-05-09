@@ -41,6 +41,7 @@ function MenuItem({
   item,
   depth = 0,
   openKeys,
+  activePath,
   activeKeys,
   activeKey,
   onBranchToggle,
@@ -49,6 +50,7 @@ function MenuItem({
   item: MenuNode;
   depth?: number;
   openKeys: Set<string>;
+  activePath: string[];
   activeKeys: Set<string>;
   activeKey?: string;
   onBranchToggle: (item: MenuNode) => void;
@@ -69,6 +71,12 @@ function MenuItem({
     .join(" ");
   const itemClasses = itemClassName ? ` ${itemClassName}` : "";
   const isProjectHome = item.slug.endsWith("-home");
+  const activePathIndex = activePath.indexOf(item.wbs_code);
+  const activeChildCode = activePathIndex >= 0 ? activePath[activePathIndex + 1] : undefined;
+  const visibleChildren =
+    activeChildCode && item.wbs_code !== activeKey
+      ? item.children.filter((child) => child.wbs_code === activeChildCode)
+      : item.children;
   const depthBackgrounds = ["transparent", "#f7fbff", "#f5f9fc", "#f3f6fa", "#f0f3f7", "#edf1f5"];
   const depthIndex = Math.min(depth, depthBackgrounds.length - 1);
   const branchStyle = {
@@ -106,12 +114,13 @@ function MenuItem({
 
       {hasChildren && open ? (
         <div className={`menu-children${activeKeys.has(item.wbs_code) ? " menu-children-active" : ""}`}>
-          {item.children.map((child) => (
+          {visibleChildren.map((child) => (
             <MenuItem
               key={child.id}
               item={child}
               depth={depth + 1}
               openKeys={openKeys}
+              activePath={activePath}
               activeKeys={activeKeys}
               activeKey={activeKey}
               onBranchToggle={onBranchToggle}
@@ -202,11 +211,12 @@ export default function Sidebar() {
 
       {!loading && !error ? (
         <nav className="menu-tree" aria-label="قائمة نظام BDCC ERP">
-          {menu.map((item) => (
+          {(activePath.length ? menu.filter((item) => item.wbs_code === activePath[0]) : menu).map((item) => (
             <MenuItem
               key={item.id}
               item={item}
               openKeys={openKeys}
+              activePath={activePath}
               activeKeys={activeKeys}
               activeKey={activeKey}
               onBranchToggle={handleBranchToggle}

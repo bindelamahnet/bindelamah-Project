@@ -299,8 +299,19 @@ select {
 }
 
 .menu-branch {
+  position: relative;
   display: grid;
   gap: 4px;
+}
+
+.menu-children > .menu-branch::before {
+  content: "";
+  position: absolute;
+  top: 19px;
+  right: 7px;
+  width: 10px;
+  border-top: 1px solid #c8d7e5;
+  pointer-events: none;
 }
 
 .menu-button,
@@ -318,9 +329,15 @@ select {
   border-radius: 8px;
   background: transparent;
   color: #344054;
-  padding: 0 10px;
+  padding: 0 calc(10px + var(--menu-indent, 0px)) 0 10px;
   text-align: right;
   cursor: pointer;
+}
+
+.menu-branch-nested > .menu-button,
+.menu-branch-nested > .menu-link,
+.menu-branch-nested > .menu-linkable-branch {
+  background: var(--menu-depth-bg);
 }
 
 .menu-button:hover,
@@ -400,21 +417,32 @@ select {
 }
 
 .menu-children {
+  position: relative;
   display: grid;
   gap: 2px;
   margin: 2px 0 6px;
   border-right: 0;
-  padding-right: 0;
+  padding: 4px 18px 6px 0;
+}
+
+.menu-children::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 7px;
+  bottom: 10px;
+  border-right: 1px solid #d5e1ec;
+  pointer-events: none;
 }
 
 .menu-children-active {
   border-radius: 8px;
-  background: #f5f7fa;
-  padding: 4px;
+  background: var(--menu-children-bg, #f5f7fa);
+  padding: 4px 18px 6px 0;
 }
 
 .menu-children-active .menu-children-active {
-  background: #eef2f6;
+  background: #edf1f5;
 }
 
 .sidebar-actions {

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronDown, ChevronLeft, LogOut, Settings } from "lucide-react";
 import type { MenuNode } from "@/lib/erp/types";
@@ -38,6 +39,7 @@ function defaultOpenKeys(nodes: MenuNode[]) {
 
 function MenuItem({
   item,
+  depth = 0,
   openKeys,
   activeKeys,
   activeKey,
@@ -45,6 +47,7 @@ function MenuItem({
   onLeafSelect
 }: {
   item: MenuNode;
+  depth?: number;
   openKeys: Set<string>;
   activeKeys: Set<string>;
   activeKey?: string;
@@ -66,9 +69,16 @@ function MenuItem({
     .join(" ");
   const itemClasses = itemClassName ? ` ${itemClassName}` : "";
   const isProjectHome = item.slug.endsWith("-home");
+  const depthBackgrounds = ["transparent", "#f7fbff", "#f5f9fc", "#f3f6fa", "#f0f3f7", "#edf1f5"];
+  const depthIndex = Math.min(depth, depthBackgrounds.length - 1);
+  const branchStyle = {
+    "--menu-indent": `${Math.min(depth, 5) * 7}px`,
+    "--menu-depth-bg": depthBackgrounds[depthIndex],
+    "--menu-children-bg": depthBackgrounds[Math.min(depth + 1, depthBackgrounds.length - 1)]
+  } as CSSProperties;
 
   return (
-    <div className="menu-branch">
+    <div className={`menu-branch${depth > 0 ? " menu-branch-nested" : ""}`} style={branchStyle}>
       {hasChildren && isProjectHome ? (
         <div className={`menu-linkable-branch${itemClasses}`} title={item.full_path_ar}>
           <Link href={href} onClick={() => onLeafSelect(item)}>
@@ -100,6 +110,7 @@ function MenuItem({
             <MenuItem
               key={child.id}
               item={child}
+              depth={depth + 1}
               openKeys={openKeys}
               activeKeys={activeKeys}
               activeKey={activeKey}

@@ -1,5 +1,5 @@
-import { notFound } from "next/navigation";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import {
   Activity,
   BriefcaseBusiness,
@@ -47,19 +47,19 @@ type TaskBasketCard = {
 };
 
 const projectWorkTypeCards = [
-  { title: "ط§ظ„طھظˆطµظٹظ„ط§طھ", total: 666, percent: "64%", done: 666, executing: 0, pending: 0, tone: "blue", icon: Zap },
-  { title: "ظ…ط´ط§ط±ظٹط¹ ط§ظ„طھظˆطµظٹظ„ط§طھ", total: 84, percent: "8%", done: 84, executing: 0, pending: 0, tone: "teal", icon: Network },
-  { title: "ط§ظ„ظ…ط´ط§ط±ظٹط¹", total: 108, percent: "10%", done: 102, executing: 2, pending: 4, tone: "violet", icon: FolderKanban },
-  { title: "ط§ظ„طµظٹط§ظ†ط© ظˆط§ظ„ظپط­طµ", total: 58, percent: "6%", done: 58, executing: 0, pending: 0, tone: "cyan", icon: ShieldCheck },
-  { title: "ط§ظ„ط·ظˆط§ط±ط¦", total: 126, percent: "12%", done: 126, executing: 0, pending: 0, tone: "red", icon: Activity }
+  { title: "التوصيلات", total: 666, percent: "64%", done: 666, executing: 0, pending: 0, tone: "blue", icon: Zap },
+  { title: "مشاريع التوصيلات", total: 84, percent: "8%", done: 84, executing: 0, pending: 0, tone: "teal", icon: Network },
+  { title: "المشاريع", total: 108, percent: "10%", done: 102, executing: 2, pending: 4, tone: "violet", icon: FolderKanban },
+  { title: "الصيانة والفحص", total: 58, percent: "6%", done: 58, executing: 0, pending: 0, tone: "cyan", icon: ShieldCheck },
+  { title: "الطوارئ", total: 126, percent: "12%", done: 126, executing: 0, pending: 0, tone: "red", icon: Activity }
 ];
 
 const projectStatusDistribution = [
-  { label: "ط¬ط¯ظٹط¯", value: 1, percent: 0, color: "#2f80ed" },
-  { label: "طھط­طھ ط§ظ„طھظ†ظپظٹط°", value: 4, percent: 0, color: "#18b990" },
-  { label: "ظ…ط±ط­ظ„ط© ط¥ط؛ظ„ط§ظ‚", value: 2, percent: 0, color: "#f6a611" },
-  { label: "ط§ط¹طھظ…ط§ط¯ ظ…ط³طھط®ظ„طµ", value: 1033, percent: 99, color: "#8056f6" },
-  { label: "ظ…ظ†طھظ‡ظٹ", value: 4, percent: 0, color: "#f04444" }
+  { label: "جديد", value: 1, percent: 0, color: "#2f80ed" },
+  { label: "تحت التنفيذ", value: 4, percent: 0, color: "#18b990" },
+  { label: "مرحلة إغلاق", value: 2, percent: 0, color: "#f6a611" },
+  { label: "اعتماد مستخلص", value: 1033, percent: 99, color: "#8056f6" },
+  { label: "منتهي", value: 4, percent: 0, color: "#f04444" }
 ];
 
 function readRoleId(row: any) {
@@ -91,7 +91,7 @@ function TaskBasketHome({
         <div>
           <p>{basketTitle}</p>
           <h2>{projectName}</h2>
-          <span>ط§ط®طھط± ط§ظ„ط¨ط·ط§ظ‚ط© ط§ظ„طھظٹ طھط±ظٹط¯ ظپطھط­ظ‡ط§ ظ…ظ† ط³ظ„ط© ط§ظ„ظ…ظ‡ط§ظ… ط§ظ„ط­ط§ظ„ظٹط©</span>
+          <span>اختر البطاقة التي تريد فتحها من سلة المهام الحالية</span>
         </div>
       </header>
 
@@ -132,14 +132,14 @@ function TaskBasketDetail({
   const detailMeta =
     view === "work-orders"
       ? {
-          title: "ظ…ظ‡ط§ظ… ط£ظˆط§ظ…ط± ط§ظ„ط¹ظ…ظ„",
-          description: "ط®ط·ظˆط§طھ ط§ظ„ط¹ظ…ظ„ ط§ظ„طھظٹ طھظ†طھط¸ط± ط¥ط¬ط±ط§ط،ظƒ ط§ظ„ط¢ظ†",
-          emptyState: "ظ„ط§ طھظˆط¬ط¯ ظ…ظ‡ط§ظ… ط£ظˆط§ظ…ط± ط¹ظ…ظ„ ط­ط§ظ„ظٹط©."
+          title: "مهام أوامر العمل",
+          description: "خطوات العمل التي تنتظر إجراءك الآن",
+          emptyState: "لا توجد مهام أوامر عمل حالية."
         }
       : {
-          title: "ط§ط¹طھظ…ط§ط¯ ط§ظ„ط¥ط¬ط§ط²ط§طھ",
-          description: "ط·ظ„ط¨ط§طھ ط§ظ„ط¥ط¬ط§ط²ط§طھ ط§ظ„طھظٹ طھظ†طھط¸ط± ظ…ظˆط§ظپظ‚طھظƒ",
-          emptyState: "ظ„ط§ طھظˆط¬ط¯ ط·ظ„ط¨ط§طھ ط¥ط¬ط§ط²ط§طھ طھظ†طھط¸ط± ط§ظ„ط§ط¹طھظ…ط§ط¯."
+          title: "اعتماد الإجازات",
+          description: "طلبات الإجازات التي تنتظر موافقتك",
+          emptyState: "لا توجد طلبات إجازات تنتظر الاعتماد."
         };
 
   return (
@@ -151,7 +151,7 @@ function TaskBasketDetail({
           <span>{projectName}</span>
         </div>
         <Link href={`/dashboard/${rootSlug}`} className="task-basket-back-link">
-          ط§ظ„ط¹ظˆط¯ط© ط¥ظ„ظ‰ ط³ظ„ط© ط§ظ„ظ…ظ‡ط§ظ…
+          العودة إلى سلة المهام
         </Link>
       </header>
 
@@ -171,19 +171,17 @@ function TaskBasketDetail({
         {count > 0 ? (
           <div className="task-basket-table" role="table" aria-label={detailMeta.title}>
             <div role="row" className="task-basket-table-head">
-              <span role="columnheader">ط§ظ„ظ…ط±ط¬ط¹</span>
-              <span role="columnheader">ط§ظ„ظˆطµظپ</span>
-              <span role="columnheader">ط§ظ„ط­ط§ظ„ط©</span>
+              <span role="columnheader">المرجع</span>
+              <span role="columnheader">الوصف</span>
+              <span role="columnheader">الحالة</span>
             </div>
             {Array.from({ length: count }, (_, index) => {
               const ref = view === "work-orders" ? `WO-${1044 + index}` : `LV-${200 + index}`;
               return (
                 <div role="row" className="task-basket-table-row" key={ref}>
                   <span role="cell">{ref}</span>
-                  <span role="cell">
-                    {view === "work-orders" ? "ط£ظ…ط± ط¹ظ…ظ„ ط¨ط§ظ†طھط¸ط§ط± ط§ظ„ظ…ط±ط§ط¬ط¹ط©" : "ط·ظ„ط¨ ط¥ط¬ط§ط²ط© ط¨ط§ظ†طھط¸ط§ط± ط§ظ„ط§ط¹طھظ…ط§ط¯"}
-                  </span>
-                  <span role="cell">{view === "work-orders" ? "ظ‚ظٹط¯ ط§ظ„ظ…ط±ط§ط¬ط¹ط©" : "ط¨ط§ظ†طھط¸ط§ط± ط§ظ„ط§ط¹طھظ…ط§ط¯"}</span>
+                  <span role="cell">{view === "work-orders" ? "أمر عمل بانتظار المراجعة" : "طلب إجازة بانتظار الاعتماد"}</span>
+                  <span role="cell">{view === "work-orders" ? "قيد المراجعة" : "بانتظار الاعتماد"}</span>
                 </div>
               );
             })}
@@ -195,23 +193,22 @@ function TaskBasketDetail({
     </section>
   );
 }
-
 function ProjectHomeDashboard({ projectName }: { projectName: string }) {
   const operationalCards = [
-    { title: "ط¥ط¬ظ…ط§ظ„ظٹ ط§ظ„ظ…ظˆط¸ظپظٹظ†", value: 0, detail: "ط³ط¹ظˆط¯ظٹ: 0", subDetail: "ط؛ظٹط± ط³ط¹ظˆط¯ظٹ: 0", icon: Users, tone: "blue" },
-    { title: "ظ…ظ‡ظ† ط§ظ„ظ…ظˆط¸ظپظٹظ†", value: 0, detail: "ط§ط¶ط؛ط· ظ„ط¹ط±ط¶ ط§ظ„طھظپط§طµظٹظ„", subDetail: "", icon: BriefcaseBusiness, tone: "violet" },
-    { title: "ط£ظˆط§ظ…ط± طھط­طھ ط§ظ„طھظ†ظپظٹط°", value: 4, detail: "ظ‚ظٹط¯ ط§ظ„ظ…طھط§ط¨ط¹ط©", subDetail: "", icon: Clock3, tone: "green" },
-    { title: "ط£ظˆط§ظ…ط± ط¬ط¯ظٹط¯ط©", value: 1, detail: "ط¨ط§ظ†طھط¸ط§ط± ط§ظ„ط¥ط¬ط±ط§ط،", subDetail: "", icon: FolderKanban, tone: "cyan" },
-    { title: "طھظ… ط§ظ„طھظ†ظپظٹط°", value: 2, detail: "ط£ظˆط§ظ…ط± ظ…ظƒطھظ…ظ„ط©", subDetail: "", icon: CheckCircle2, tone: "gold" },
-    { title: "ط£ظˆط§ظ…ط± ظ…ظ†طھظ‡ظٹط©", value: 4, detail: "ظ…ط؛ظ„ظ‚ط©", subDetail: "", icon: ShieldCheck, tone: "slate" }
+    { title: "إجمالي الموظفين", value: 0, detail: "سعودي: 0", subDetail: "غير سعودي: 0", icon: Users, tone: "blue" },
+    { title: "مهن الموظفين", value: 0, detail: "اضغط لعرض التفاصيل", subDetail: "", icon: BriefcaseBusiness, tone: "violet" },
+    { title: "أوامر تحت التنفيذ", value: 4, detail: "قيد المتابعة", subDetail: "", icon: Clock3, tone: "green" },
+    { title: "أوامر جديدة", value: 1, detail: "بانتظار الإجراء", subDetail: "", icon: FolderKanban, tone: "cyan" },
+    { title: "تم التنفيذ", value: 2, detail: "أوامر مكتملة", subDetail: "", icon: CheckCircle2, tone: "gold" },
+    { title: "أوامر منتهية", value: 4, detail: "مغلقة", subDetail: "", icon: ShieldCheck, tone: "slate" }
   ];
 
   return (
-    <section className="project-home-dashboard" aria-label={`ط¥ط­طµط§ط¦ظٹط§طھ ${projectName}`}>
+    <section className="project-home-dashboard" aria-label={`إحصائيات ${projectName}`}>
       <header className="section-title-row">
         <div>
-          <h3>ط§ظ„ط±ط¦ظٹط³ظٹط©</h3>
-          <p>ط¥ط­طµط§ط¦ظٹط§طھ ط§ظ„ظ…ط´ط±ظˆط¹ ط§ظ„ط­ط§ظ„ظٹ ظپظ‚ط·: {projectName}</p>
+          <h3>الرئيسية</h3>
+          <p>إحصائيات المشروع الحالي فقط: {projectName}</p>
         </div>
       </header>
 
@@ -239,8 +236,8 @@ function ProjectHomeDashboard({ projectName }: { projectName: string }) {
       <section className="work-type-section">
         <header className="section-title-row">
           <div>
-            <h3>ط¥ط­طµط§ط¦ظٹط§طھ ط­ط³ط¨ ظ†ظˆط¹ ط§ظ„ط¹ظ…ظ„</h3>
-            <p>ط­ط³ط¨ ط³ظ†ط© طھط§ط±ظٹط® ط§ظ„ط§ط¹طھظ…ط§ط¯</p>
+            <h3>إحصائيات حسب نوع العمل</h3>
+            <p>حسب سنة تاريخ الاعتماد</p>
           </div>
           <Droplets size={22} />
         </header>
@@ -258,7 +255,7 @@ function ProjectHomeDashboard({ projectName }: { projectName: string }) {
                   </h3>
                 </header>
                 <strong>{card.total}</strong>
-                <p>ط¥ط¬ظ…ط§ظ„ظٹ ط£ظˆط§ظ…ط± ط§ظ„ط¹ظ…ظ„</p>
+                <p>إجمالي أوامر العمل</p>
                 <div className="work-progress" aria-hidden="true">
                   <span style={{ width: card.percent }} />
                 </div>
@@ -282,15 +279,15 @@ function ProjectHomeDashboard({ projectName }: { projectName: string }) {
                 <footer>
                   <div>
                     <b>{card.done}</b>
-                    <span>طھظ… ط§ظ„ط§ظ†طھظ‡ط§ط،</span>
+                    <span>تم الانتهاء</span>
                   </div>
                   <div>
                     <b>{card.executing}</b>
-                    <span>طھظ… ط§ظ„طھظ†ظپظٹط°</span>
+                    <span>تم التنفيذ</span>
                   </div>
                   <div>
                     <b>{card.pending}</b>
-                    <span>طھط­طھ ط§ظ„طھظ†ظپظٹط°</span>
+                    <span>تحت التنفيذ</span>
                   </div>
                 </footer>
               </article>
@@ -299,21 +296,21 @@ function ProjectHomeDashboard({ projectName }: { projectName: string }) {
         </div>
       </section>
 
-      <section className="region-status-section" aria-label="ط§ظ„ظˆط¶ط¹ ط§ظ„ط­ط§ظ„ظٹ ظ„ظ„ظ…ط´ط±ظˆط¹">
+      <section className="region-status-section" aria-label="الوضع الحالي للمشروع">
         <header className="section-title-row">
           <div>
-            <h3>ط§ظ„ظˆط¶ط¹ ط§ظ„ط­ط§ظ„ظٹ ظ„ظ„ظ…ط´ط±ظˆط¹</h3>
-            <p>طھظˆط²ظٹط¹ ط£ظˆط§ظ…ط± ط§ظ„ط¹ظ…ظ„ ط­ط³ط¨ ط§ظ„ط­ط§ظ„ط©</p>
+            <h3>الوضع الحالي للمشروع</h3>
+            <p>توزيع أوامر العمل حسب الحالة</p>
           </div>
           <PieChart size={22} />
         </header>
 
         <div className="region-status-grid">
           <article className="status-donut-card">
-            <div className="status-donut" aria-label="ط¥ط¬ظ…ط§ظ„ظٹ ط£ظˆط§ظ…ط± ط§ظ„ط¹ظ…ظ„ 1044">
+            <div className="status-donut" aria-label="إجمالي أوامر العمل 1044">
               <div>
                 <strong>1,044</strong>
-                <span>ط¥ط¬ظ…ط§ظ„ظٹ</span>
+                <span>إجمالي</span>
               </div>
             </div>
           </article>
@@ -486,8 +483,7 @@ export default async function MenuPage({ params }: PageProps) {
     catalogRegions
   });
   const searchableItems = [...removeTransformedProjectDescendants(allowedItems, transformedRootCodes), ...syntheticRows];
-  const itemSlug = slug.find((segment) => searchableItems.some((row) => row.slug === segment)) ?? currentSlug;
-  const item = searchableItems.find((row) => row.slug === itemSlug);
+  const item = searchableItems.find((row) => row.slug === currentSlug);
 
   if (!item) {
     notFound();
@@ -522,32 +518,11 @@ export default async function MenuPage({ params }: PageProps) {
       tone: "gold"
     }
   ];
-  return (
-    <main className="content-page">
-      {!isTaskBasketRoot ? (
-        <>
-          <header className="page-header">
-            <p>{item.wbs_code}</p>
-            <h2>{item.name_ar}</h2>
-            <span>{item.full_path_ar}</span>
-          </header>
 
-          <section className="module-panel">
-            <h3>طµظ„ط§ط­ظٹط§طھظƒ ظپظٹ ظ‡ط°ظ‡ ط§ظ„ط´ط§ط´ط©</h3>
-            <div className="permission-row">
-              <span className={item.can_create ? "allowed" : ""}>ط¥ط¶ط§ظپط©</span>
-              <span className={item.can_update ? "allowed" : ""}>طھط¹ط¯ظٹظ„</span>
-              <span className={item.can_delete ? "allowed" : ""}>ط­ط°ظپ</span>
-              <span className={item.can_approve ? "allowed" : ""}>ط§ط¹طھظ…ط§ط¯</span>
-            </div>
-          </section>
-        </>
-      ) : null}
-
-      {item.slug === "electrical-projects" ? <ElectricalProjectsClient companies={companies} regions={electricalRegions} /> : null}
-      {item.slug.startsWith("menu-0-1-1-9-3-1") ? <RegionsManagerClient /> : null}
-      {isTaskBasketRoot ? (
-        detailSlug ? (
+  if (isTaskBasketRoot) {
+    return (
+      <main className="content-page">
+        {detailSlug ? (
           <TaskBasketDetail
             basketTitle="سلة المهام"
             projectName={currentProjectName}
@@ -557,11 +532,32 @@ export default async function MenuPage({ params }: PageProps) {
           />
         ) : (
           <TaskBasketHome basketTitle="سلة المهام" projectName={currentProjectName} cards={taskBasketCards} rootSlug={item.slug} />
-        )
-      ) : null}
+        )}
+      </main>
+    );
+  }
+
+  return (
+    <main className="content-page">
+      <header className="page-header">
+        <p>{item.wbs_code}</p>
+        <h2>{item.name_ar}</h2>
+        <span>{item.full_path_ar}</span>
+      </header>
+
+      <section className="module-panel">
+        <h3>صلاحياتك في هذه الشاشة</h3>
+        <div className="permission-row">
+          <span className={item.can_create ? "allowed" : ""}>إضافة</span>
+          <span className={item.can_update ? "allowed" : ""}>تعديل</span>
+          <span className={item.can_delete ? "allowed" : ""}>حذف</span>
+          <span className={item.can_approve ? "allowed" : ""}>اعتماد</span>
+        </div>
+      </section>
+
+      {item.slug === "electrical-projects" ? <ElectricalProjectsClient companies={companies} regions={electricalRegions} /> : null}
+      {item.slug.startsWith("menu-0-1-1-9-3-1") ? <RegionsManagerClient /> : null}
       {isProjectHome ? <ProjectHomeDashboard projectName={currentProjectName} /> : null}
     </main>
   );
 }
-
-

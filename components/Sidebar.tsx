@@ -128,11 +128,13 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [menu, setMenu] = useState<MenuNode[]>([]);
   const [openKeys, setOpenKeys] = useState<Set<string>>(new Set());
+  const [selectedPath, setSelectedPath] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const parts = pathname.split("/").filter(Boolean);
   const activeSlug = parts[0] === "dashboard" && parts.length > 1 ? parts.at(-1) : undefined;
-  const activePath = findPathToSlug(menu, activeSlug);
+  const routeActivePath = findPathToSlug(menu, activeSlug);
+  const activePath = selectedPath.length ? selectedPath : routeActivePath;
   const activeKeys = new Set(activePath);
   const activeKey = activePath.at(-1);
 
@@ -153,10 +155,14 @@ export default function Sidebar() {
     const parts = pathname.split("/").filter(Boolean);
     const activeSlug = parts[0] === "dashboard" && parts.length > 1 ? parts.at(-1) : undefined;
     const activePath = findPathToSlug(menu, activeSlug);
+    setSelectedPath(activePath);
     setOpenKeys(activePath.length ? new Set(activePath) : defaultOpenKeys(menu));
   }, [menu, pathname]);
 
   function handleBranchToggle(item: MenuNode) {
+    const path = findPathToKey(menu, item.wbs_code);
+    setSelectedPath(path);
+
     setOpenKeys((current) => {
       if (current.has(item.wbs_code)) {
         const next = new Set(current);
@@ -170,7 +176,9 @@ export default function Sidebar() {
   }
 
   function handleLeafSelect(item: MenuNode) {
-    setOpenKeys(new Set(findPathToKey(menu, item.wbs_code)));
+    const path = findPathToKey(menu, item.wbs_code);
+    setSelectedPath(path);
+    setOpenKeys(new Set(path));
   }
 
   async function signOut() {

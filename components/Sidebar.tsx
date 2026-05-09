@@ -29,10 +29,6 @@ function findPathToSlug(nodes: MenuNode[], slug?: string, path: string[] = []): 
   return [];
 }
 
-function collectDescendantKeys(item: MenuNode): string[] {
-  return item.children.flatMap((child) => [child.wbs_code, ...collectDescendantKeys(child)]);
-}
-
 function defaultOpenKeys(nodes: MenuNode[]) {
   return new Set(nodes.map((item) => item.wbs_code));
 }
@@ -171,17 +167,7 @@ export default function Sidebar() {
   function handleBranchToggle(item: MenuNode) {
     const path = findPathToKey(menu, item.wbs_code);
     setSelectedPath(path);
-
-    setOpenKeys((current) => {
-      if (current.has(item.wbs_code)) {
-        const next = new Set(current);
-        next.delete(item.wbs_code);
-        for (const descendant of collectDescendantKeys(item)) next.delete(descendant);
-        return next;
-      }
-
-      return new Set(findPathToKey(menu, item.wbs_code));
-    });
+    setOpenKeys(new Set(path));
   }
 
   function handleLeafSelect(item: MenuNode) {

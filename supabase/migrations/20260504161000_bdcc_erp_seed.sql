@@ -3,8 +3,7 @@ insert into public.companies (id, name_ar, name_en, group_no) values
 on conflict (id) do update set name_ar = excluded.name_ar, name_en = excluded.name_en, group_no = excluded.group_no;
 
 insert into public.projects (id, company_id, project_no, name_ar, project_type, group_no, subgroup_no, region_code, is_active) values
-('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'ELEC-001', U&'\0645\0634\0627\0631\064a\0639 \0627\0644\0643\0647\0631\0628\0627\0621', 'electrical', 1, null, '0', true),
-('10000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'WATER-001', U&'\0645\0634\0627\0631\064a\0639 \0627\0644\0645\064a\0627\0647', 'private', 2, 1, '0', true),
+('10000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', '701240018', U&'\0645\0634\0631\0648\0639 \0627\0644\062c\0628\064a\0644', 'private', 2, 1, 'eastern', true),
 ('10000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', 'UNIV-001', U&'\0645\0634\0627\0631\064a\0639 \0627\0644\062c\0627\0645\0639\0629', 'private', 2, 2, '0', true),
 ('10000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000001', 'SHARED-001', U&'\0627\0644\062e\062f\0645\0627\062a \0627\0644\0645\0634\062a\0631\0643\0629', 'shared', 3, null, '0', true)
 on conflict (id) do update set name_ar = excluded.name_ar, project_no = excluded.project_no, project_type = excluded.project_type, group_no = excluded.group_no, subgroup_no = excluded.subgroup_no, is_active = excluded.is_active;

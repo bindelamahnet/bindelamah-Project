@@ -6,6 +6,38 @@ export type ProjectMenuConfig = {
   kind: "electrical" | "water" | "university";
 };
 
+const cityLabels: Record<string, string> = {
+  dammam: "الدمام",
+  ahsa: "الأحساء",
+  hafr_al_batin: "حفر الباطن",
+  jizan_city: "جيزان",
+  jubail: "الجبيل"
+};
+
+const citySortOrdersByRegion: Record<string, Record<string, number>> = {
+  eastern: {
+    dammam: 1,
+    ahsa: 2,
+    hafr_al_batin: 3,
+    jubail: 4
+  },
+  jazan: {
+    jizan_city: 1,
+    jazan: 2
+  }
+};
+
+const projectCityOverrides: Record<string, { code: string; regionCode?: string }> = {
+  "10000000-0000-0000-0000-000000000007": { code: "ahsa", regionCode: "eastern" },
+  "4400014805": { code: "ahsa", regionCode: "eastern" },
+  "10000000-0000-0000-0000-000000000008": { code: "hafr_al_batin", regionCode: "eastern" },
+  "4400014839": { code: "hafr_al_batin", regionCode: "eastern" },
+  "10000000-0000-0000-0000-000000000010": { code: "jizan_city", regionCode: "jazan" },
+  "4400014874": { code: "jizan_city", regionCode: "jazan" },
+  "10000000-0000-0000-0000-000000000002": { code: "jubail", regionCode: "eastern" },
+  "701240018": { code: "jubail", regionCode: "eastern" }
+};
+
 export type ProjectRow = {
   id: string;
   project_no: string | null;
@@ -114,10 +146,20 @@ export function cityName(code: string | null | undefined, regionCode: string | n
   if (!code || code === "0") return defaultCityForRegion(regionCode).name;
   const sameRegionDefault = defaultCityForRegion(regionCode);
   if (sameRegionDefault.code === code) return sameRegionDefault.name;
-  return code;
+  return cityLabels[code] ?? code;
+}
+
+function citySortRank(code: string, regionCode: string | null | undefined) {
+  const regionOrder = citySortOrdersByRegion[regionCode || "0"];
+  if (!regionOrder) return 9999;
+  return regionOrder[code] ?? 9999;
 }
 
 export function projectCity(project: ProjectRow) {
+  const override = projectCityOverrides[project.id] ?? (project.project_no ? projectCityOverrides[project.project_no] : undefined);
+  if (override) {
+    return { code: override.code, name: cityName(override.code, override.regionCode ?? project.region_code) };
+  }
   const fallback = defaultCityForRegion(project.region_code);
   const code = project.city_code || fallback.code;
   return { code, name: cityName(code, project.region_code) };
@@ -199,6 +241,7 @@ export function buildProjectMenuRows({
     }
 
     Array.from(regions.values())
+      .filter((region) => region.projects.length > 0)
       .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name, "ar"))
       .forEach((region, regionIndex) => {
         const regionCode = `${config.rootCode}.r${regionIndex + 1}`;
@@ -228,7 +271,11 @@ export function buildProjectMenuRows({
         }
 
         Array.from(cities.values())
-          .sort((a, b) => a.name.localeCompare(b.name, "ar"))
+          .sort((a, b) => {
+            const rankCompare = citySortRank(a.code, region.code) - citySortRank(b.code, region.code);
+            if (rankCompare) return rankCompare;
+            return a.name.localeCompare(b.name, "ar");
+          })
           .forEach((city, cityIndex) => {
             const cityCode = `${regionCode}.c${cityIndex + 1}`;
             const citySlug = `${config.slugPrefix}-city-${slugPart(region.code)}-${slugPart(city.code)}`;

@@ -1,18 +1,15 @@
+alter table public.projects
+add column if not exists city_code text not null default '0';
+
+update public.projects
+set city_code = 'dammam'
+where id = '10000000-0000-0000-0000-000000000005'
+  and project_type = 'electrical'
+  and region_code = 'eastern';
+
 insert into public.projects
-(id, company_id, project_no, name_ar, project_type, group_no, subgroup_no, region_code, city_code, is_active)
+  (id, company_id, project_no, name_ar, project_type, group_no, subgroup_no, region_code, city_code, is_active)
 values
-  (
-    '10000000-0000-0000-0000-000000000005',
-    '00000000-0000-0000-0000-000000000001',
-    '4400014818',
-    'مشروع الشرقية 1',
-    'electrical',
-    1,
-    null,
-    'eastern',
-    'dammam',
-    true
-  ),
   (
     '10000000-0000-0000-0000-000000000007',
     '00000000-0000-0000-0000-000000000001',
@@ -23,18 +20,6 @@ values
     null,
     'eastern',
     'ahsa',
-    true
-  ),
-  (
-    '10000000-0000-0000-0000-000000000008',
-    '00000000-0000-0000-0000-000000000001',
-    '4400014839',
-    'مشروع حفر الباطن',
-    'electrical',
-    1,
-    null,
-    'eastern',
-    'hafr_al_batin',
     true
   )
 on conflict (id) do update set
@@ -47,3 +32,7 @@ on conflict (id) do update set
   region_code = excluded.region_code,
   city_code = excluded.city_code,
   is_active = excluded.is_active;
+
+delete from public.projects
+where project_no = '4400014805'
+  and id <> '10000000-0000-0000-0000-000000000007';

@@ -157,11 +157,11 @@ export default function Sidebar() {
   useEffect(() => {
     if (!menu.length) return;
 
-    const parts = pathname.split("/").filter(Boolean);
-    const activeSlug = parts[0] === "dashboard" && parts.length > 1 ? parts.at(-1) : undefined;
-    const activePath = findPathToSlug(menu, activeSlug);
-    setSelectedPath(activePath);
-    setOpenKeys(activePath.length ? new Set(activePath) : defaultOpenKeys(menu));
+    const currentParts = pathname.split("/").filter(Boolean);
+    const currentActiveSlug = currentParts[0] === "dashboard" && currentParts.length > 1 ? currentParts.at(-1) : undefined;
+    const nextActivePath = findPathToSlug(menu, currentActiveSlug);
+    setSelectedPath(nextActivePath);
+    setOpenKeys(nextActivePath.length ? new Set(nextActivePath) : defaultOpenKeys(menu));
   }, [menu, pathname]);
 
   function handleBranchToggle(item: MenuNode) {

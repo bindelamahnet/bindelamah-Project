@@ -1,1 +1,2 @@
-
+# Documentation
+BDCC ERP documentation.
